@@ -1,58 +1,26 @@
-﻿namespace SGIF.Classes
+namespace SGIF.Classes
 {
-    public class Trens
+    public partial class Trens
     {
+        //-----------------------------
+        // Atributos
+        //-----------------------------
         private int _idTrem;
         private string _identificacao = string.Empty;
-        private ICollection<Locomotiva> _locomotivas = new List<Locomotiva>();
-        private ICollection<Vagao> _vagoes = new List<Vagao>();
 
+        //-----------------------------
+        // Getters e Setters
+        //-----------------------------
         public int IdTrem
         {
-            get 
-            { 
-                return _idTrem; 
-            }
-            set 
-            { 
-                _idTrem = value; 
-            }
+            get { return _idTrem; }
+            set { _idTrem = value; }
         }
 
         public string Identificacao
         {
-            get 
-            { 
-                return _identificacao; 
-            }
-            set 
-            { 
-                _identificacao = value; 
-            }
-        }
-
-        public ICollection<Locomotiva> Locomotivas
-        {
-            get 
-            { 
-                return _locomotivas; 
-            }
-            set 
-            { 
-                _locomotivas = value; 
-            }
-        }
-
-        public ICollection<Vagao> Vagoes
-        {
-            get 
-            { 
-                return _vagoes; 
-            }
-            set 
-            { 
-                _vagoes = value; 
-            }
+            get { return _identificacao; }
+            set { _identificacao = value; }
         }
     }
 }
