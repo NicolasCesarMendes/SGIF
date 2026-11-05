@@ -1,4 +1,4 @@
-namespace SGIF.Models
+﻿namespace SGIF.Models
 {
     public class ErrorViewModel
     {

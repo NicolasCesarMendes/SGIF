@@ -1,215 +1,106 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
 namespace SGIF.Classes
 {
-    public partial class Locomotivas
+    public class Locomotivas : BaseDados
     {
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Locomotivas()
+        public Locomotivas(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\SGIFBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir (preenche IdLocomotiva com o id gerado)
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Locomotiva locomotiva)
         {
-            try
-            {
-                string cmdSQL = @"
-                    INSERT INTO Locomotivas
-                    (
-                        numero_identificacao, modelo, fabricante, ano_fabricacao, status, id_trem
-                    )
-                    OUTPUT INSERTED.id_locomotiva
-                    VALUES
-                    (
-                        @numero_identificacao, @modelo, @fabricante, @ano_fabricacao, @status, @id_trem
-                    )";
+            const string sql = @"
+                INSERT INTO Locomotivas
+                    (numero_identificacao, modelo, fabricante, ano_fabricacao, status, id_trem)
+                OUTPUT INSERTED.id_locomotiva
+                VALUES
+                    (@numero_identificacao, @modelo, @fabricante, @ano_fabricacao, @status, @id_trem)";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@numero_identificacao", NumeroIdentificacao);
-                cmd.Parameters.AddWithValue("@modelo", Modelo);
-                cmd.Parameters.AddWithValue("@fabricante", (object?)Fabricante ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ano_fabricacao", (object?)AnoFabricacao ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@status", Status);
-                cmd.Parameters.AddWithValue("@id_trem", (object?)IdTrem ?? DBNull.Value);
-
-                con.Open();
-                IdLocomotiva = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-            finally
-            {
-                con.Close();
-            }
+            locomotiva.IdLocomotiva = ExecutarEscalar(sql, p => AdicionarParametros(p, locomotiva));
+            return locomotiva.IdLocomotiva;
         }
 
-        //-----------------------------
-        // Alterar
-        //-----------------------------
-        public void Alterar()
+        public bool Atualizar(Locomotiva locomotiva)
         {
-            try
+            const string sql = @"
+                UPDATE Locomotivas SET
+                    numero_identificacao = @numero_identificacao,
+                    modelo = @modelo,
+                    fabricante = @fabricante,
+                    ano_fabricacao = @ano_fabricacao,
+                    status = @status,
+                    id_trem = @id_trem
+                WHERE id_locomotiva = @id_locomotiva";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = @"
-                    UPDATE Locomotivas SET
-                        numero_identificacao = @numero_identificacao,
-                        modelo = @modelo,
-                        fabricante = @fabricante,
-                        ano_fabricacao = @ano_fabricacao,
-                        status = @status,
-                        id_trem = @id_trem
-                    WHERE id_locomotiva = @id_locomotiva";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_locomotiva", IdLocomotiva);
-                cmd.Parameters.AddWithValue("@numero_identificacao", NumeroIdentificacao);
-                cmd.Parameters.AddWithValue("@modelo", Modelo);
-                cmd.Parameters.AddWithValue("@fabricante", (object?)Fabricante ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@ano_fabricacao", (object?)AnoFabricacao ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@status", Status);
-                cmd.Parameters.AddWithValue("@id_trem", (object?)IdTrem ?? DBNull.Value);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_locomotiva", locomotiva.IdLocomotiva);
+                AdicionarParametros(p, locomotiva);
+            });
         }
 
-        //-----------------------------
-        // Excluir (erro 547 se houver sensores associados)
-        //-----------------------------
-        public void Excluir()
+        public bool Excluir(int idLocomotiva)
         {
-            try
-            {
-                string cmdSQL = "DELETE FROM Locomotivas WHERE id_locomotiva = @id_locomotiva";
+            const string sql = "DELETE FROM Locomotivas WHERE id_locomotiva = @id_locomotiva";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_locomotiva", IdLocomotiva);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Executar(sql, p => p.AddWithValue("@id_locomotiva", idLocomotiva));
         }
 
-        //-----------------------------
-        // Selecionar
-        //-----------------------------
-        public DataTable? Selecionar()
+        public Locomotiva? BuscarPorId(int idLocomotiva)
         {
-            try
-            {
-                string cmdSQL = "SELECT * FROM Locomotivas ORDER BY numero_identificacao";
+            const string sql = "SELECT * FROM Locomotivas WHERE id_locomotiva = @id_locomotiva";
 
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_locomotiva", idLocomotiva));
         }
 
-        //-----------------------------
-        // Buscar por ID
-        //-----------------------------
-        public DataTable? BuscarPorId(int id)
+        public List<Locomotiva> ListarTodos()
         {
-            try
-            {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Locomotivas
-                    WHERE id_locomotiva = @id_locomotiva";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_locomotiva", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Buscar(null, null);
         }
 
-        //-----------------------------
-        // Buscar por texto (número ou modelo) e/ou status
-        // Parâmetros nulos ou vazios são ignorados
-        //-----------------------------
-        public DataTable? Buscar(string? termo, string? status)
+        // Busca por texto (número ou modelo) e/ou status. Parâmetros nulos ou vazios são ignorados.
+        public List<Locomotiva> Buscar(string? termo, string? status)
         {
-            try
+            const string sql = @"
+                SELECT * FROM Locomotivas
+                WHERE (@termo IS NULL OR numero_identificacao LIKE @termo OR modelo LIKE @termo)
+                  AND (@status IS NULL OR status = @status)
+                ORDER BY numero_identificacao";
+
+            return Consultar(sql, Mapear, p =>
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Locomotivas
-                    WHERE (@termo IS NULL OR numero_identificacao LIKE @termo OR modelo LIKE @termo)
-                      AND (@status IS NULL OR status = @status)
-                    ORDER BY numero_identificacao";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.Add("@termo", SqlDbType.VarChar, 200).Value =
+                p.Add("@termo", SqlDbType.VarChar, 200).Value =
                     string.IsNullOrWhiteSpace(termo) ? (object)DBNull.Value : "%" + termo.Trim() + "%";
-                cmd.Parameters.Add("@status", SqlDbType.VarChar, 50).Value =
+                p.Add("@status", SqlDbType.VarChar, 50).Value =
                     string.IsNullOrWhiteSpace(status) ? (object)DBNull.Value : status;
+            });
+        }
 
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
+        private void AdicionarParametros(SqlParameterCollection p, Locomotiva l)
+        {
+            p.AddWithValue("@numero_identificacao", l.NumeroIdentificacao);
+            p.AddWithValue("@modelo", l.Modelo);
+            p.AddWithValue("@fabricante", ValorOuNulo(l.Fabricante));
+            p.AddWithValue("@ano_fabricacao", ValorOuNulo(l.AnoFabricacao));
+            p.AddWithValue("@status", l.Status);
+            p.AddWithValue("@id_trem", ValorOuNulo(l.IdTrem));
+        }
 
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
+        private static Locomotiva Mapear(SqlDataReader r)
+        {
+            return new Locomotiva
             {
-                con.Close();
-            }
+                IdLocomotiva = r.GetInt32(r.GetOrdinal("id_locomotiva")),
+                NumeroIdentificacao = r.GetString(r.GetOrdinal("numero_identificacao")),
+                Modelo = r.GetString(r.GetOrdinal("modelo")),
+                Fabricante = r.GetStringNulo("fabricante"),
+                AnoFabricacao = r.GetIntNulo("ano_fabricacao"),
+                Status = r.GetString(r.GetOrdinal("status")),
+                IdTrem = r.GetIntNulo("id_trem")
+            };
         }
     }
 }

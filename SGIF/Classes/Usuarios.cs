@@ -1,215 +1,113 @@
-﻿namespace SGIF.Classes
-{
-    public class Usuarios
-    {
-        
-    }
-}
-
-/*
-
-using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
-namespace ProjBancoDados.BancoDados
+namespace SGIF.Classes
 {
-    public class Usuario
+    public class Usuarios : BaseDados
     {
-        //-----------------------------
-        // Atributos
-        //-----------------------------
-        public int idUsuario;
-        public string nome;
-        public string senha;
-        public string email;
-        public int nvAcesso;
-
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Usuario()
+        public Usuarios(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\GRMPBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Usuario usuario)
         {
-            try
+            const string sql = @"
+                INSERT INTO Usuarios (nome, email, senha, nivel_acesso, ativo)
+                OUTPUT INSERTED.id_usuario
+                VALUES (@nome, @email, @senha, @nivel_acesso, @ativo)";
+
+            usuario.IdUsuario = ExecutarEscalar(sql, p =>
             {
-                string cmdSQL = @"INSERT INTO Usuario (Nome, Senha, Email, NvAcesso)
-                                  VALUES (@Nome, @Senha, @Email, @NvAcesso)";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@Nome", nome);
-                cmd.Parameters.AddWithValue("@Senha", senha);
-                cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@NvAcesso", nvAcesso);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@nome", usuario.Nome);
+                p.AddWithValue("@email", usuario.Email);
+                p.AddWithValue("@senha", usuario.Senha);
+                p.AddWithValue("@nivel_acesso", usuario.NivelAcesso);
+                p.AddWithValue("@ativo", usuario.Ativo);
+            });
+            return usuario.IdUsuario;
         }
 
-        //-----------------------------
-        // Alterar
-        //-----------------------------
-        public void Alterar()
+        public bool Atualizar(Usuario usuario)
         {
-            try
+            const string sql = @"
+                UPDATE Usuarios SET
+                    nome = @nome,
+                    email = @email,
+                    nivel_acesso = @nivel_acesso,
+                    ativo = @ativo
+                WHERE id_usuario = @id_usuario";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = @"UPDATE Usuario SET
-                                    Nome = @Nome,
-                                    Senha = @Senha,
-                                    Email = @Email,
-                                    NvAcesso = @NvAcesso
-                                  WHERE IdUsuario = @IdUsuario";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-                cmd.Parameters.AddWithValue("@Nome", nome);
-                cmd.Parameters.AddWithValue("@Senha", senha);
-                cmd.Parameters.AddWithValue("@Email", email);
-                cmd.Parameters.AddWithValue("@NvAcesso", nvAcesso);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_usuario", usuario.IdUsuario);
+                p.AddWithValue("@nome", usuario.Nome);
+                p.AddWithValue("@email", usuario.Email);
+                p.AddWithValue("@nivel_acesso", usuario.NivelAcesso);
+                p.AddWithValue("@ativo", usuario.Ativo);
+            });
         }
 
-        //-----------------------------
-        // Excluir
-        //-----------------------------
-        public void Excluir()
+        public bool AtualizarSenha(int idUsuario, string senhaHash)
         {
-            try
-            {
-                string cmdSQL = "DELETE FROM Usuario WHERE IdUsuario = @IdUsuario";
+            const string sql = "UPDATE Usuarios SET senha = @senha WHERE id_usuario = @id_usuario";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-                cmd.Parameters.AddWithValue("@IdUsuario", idUsuario);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
+            return Executar(sql, p =>
             {
-                con.Close();
-            }
+                p.AddWithValue("@id_usuario", idUsuario);
+                p.AddWithValue("@senha", senhaHash);
+            });
         }
 
-        //-----------------------------
-        // Selecionar
-        //-----------------------------
-        public DataTable Selecionar()
+        public bool AlterarAtivo(int idUsuario, bool ativo)
         {
-            try
+            const string sql = "UPDATE Usuarios SET ativo = @ativo WHERE id_usuario = @id_usuario";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = "SELECT * FROM Usuario ORDER BY IdUsuario";
-
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+                p.AddWithValue("@id_usuario", idUsuario);
+                p.AddWithValue("@ativo", ativo);
+            });
         }
 
-        public DataTable SelecionarSeguro()
+        public bool Excluir(int idUsuario)
         {
-            try
-            {
-                string cmdSQL = "SELECT idUsuario ,Email, nome, nvAcesso FROM Usuario ORDER BY IdUsuario";
+            const string sql = "DELETE FROM Usuarios WHERE id_usuario = @id_usuario";
 
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return Executar(sql, p => p.AddWithValue("@id_usuario", idUsuario));
         }
 
-        public DataTable BuscarPorEmail(string email)
+        public Usuario? BuscarPorId(int idUsuario)
         {
-            try
-            {
-                string cmdSQL = "SELECT * FROM Usuario WHERE Email = @Email";
+            const string sql = "SELECT * FROM Usuarios WHERE id_usuario = @id_usuario";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-                cmd.Parameters.AddWithValue("@Email", email);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_usuario", idUsuario));
         }
-        public DataTable BuscarPorID(int id)
+
+        public Usuario? BuscarPorEmail(string email)
         {
-            try
+            const string sql = "SELECT * FROM Usuarios WHERE email = @email";
+
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@email", email));
+        }
+
+        public List<Usuario> ListarTodos()
+        {
+            const string sql = "SELECT * FROM Usuarios ORDER BY nome";
+
+            return Consultar(sql, Mapear);
+        }
+
+        private static Usuario Mapear(SqlDataReader r)
+        {
+            return new Usuario
             {
-                string cmdSQL = "SELECT NvAcesso FROM Usuario WHERE IdUsuario = @id";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-                cmd.Parameters.AddWithValue("@id", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                IdUsuario = r.GetInt32(r.GetOrdinal("id_usuario")),
+                Nome = r.GetString(r.GetOrdinal("nome")),
+                Email = r.GetString(r.GetOrdinal("email")),
+                Senha = r.GetString(r.GetOrdinal("senha")),
+                NivelAcesso = r.GetInt32(r.GetOrdinal("nivel_acesso")),
+                Ativo = r.GetBoolean(r.GetOrdinal("ativo"))
+            };
         }
     }
 }
-
-*/

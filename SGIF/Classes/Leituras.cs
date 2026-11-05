@@ -1,162 +1,75 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
 namespace SGIF.Classes
 {
-    public partial class Leituras
+    public class Leituras : BaseDados
     {
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Leituras()
+        public Leituras(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\SGIFBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir (preenche IdLeitura com o id gerado)
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Leitura leitura)
         {
-            try
+            const string sql = @"
+                INSERT INTO Leituras (id_sensor, valor, data_hora)
+                OUTPUT INSERTED.id_leitura
+                VALUES (@id_sensor, @valor, @data_hora)";
+
+            leitura.IdLeitura = ExecutarEscalar(sql, p =>
             {
-                string cmdSQL = @"
-                    INSERT INTO Leituras
-                    (
-                        id_sensor, valor, data_hora
-                    )
-                    OUTPUT INSERTED.id_leitura
-                    VALUES
-                    (
-                        @id_sensor, @valor, @data_hora
-                    )";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_sensor", IdSensor);
-                cmd.Parameters.AddWithValue("@valor", Valor);
-                cmd.Parameters.Add("@data_hora", SqlDbType.DateTime2).Value = DataHora;
-
-                con.Open();
-                IdLeitura = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_sensor", leitura.IdSensor);
+                p.AddWithValue("@valor", leitura.Valor);
+                p.Add("@data_hora", SqlDbType.DateTime2).Value = leitura.DataHora;
+            });
+            return leitura.IdLeitura;
         }
 
-        //-----------------------------
-        // Buscar por ID
-        // (Leituras é histórico: não há Alterar, Excluir nem Selecionar geral)
-        //-----------------------------
-        public DataTable? BuscarPorId(int id)
+        public Leitura? BuscarPorId(int idLeitura)
         {
-            try
-            {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Leituras
-                    WHERE id_leitura = @id_leitura";
+            const string sql = "SELECT * FROM Leituras WHERE id_leitura = @id_leitura";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_leitura", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_leitura", idLeitura));
         }
 
-        //-----------------------------
-        // Selecionar por sensor (período opcional)
-        //-----------------------------
-        public DataTable? SelecionarPorSensor(int idSensor, DateTime? inicio = null, DateTime? fim = null)
+        // Histórico de um sensor, com período opcional
+        public List<Leitura> ListarPorSensor(int idSensor, DateTime? inicio = null, DateTime? fim = null)
         {
-            try
+            const string sql = @"
+                SELECT * FROM Leituras
+                WHERE id_sensor = @id_sensor
+                  AND (@inicio IS NULL OR data_hora >= @inicio)
+                  AND (@fim IS NULL OR data_hora <= @fim)
+                ORDER BY data_hora";
+
+            return Consultar(sql, Mapear, p =>
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Leituras
-                    WHERE id_sensor = @id_sensor
-                      AND (@inicio IS NULL OR data_hora >= @inicio)
-                      AND (@fim IS NULL OR data_hora <= @fim)
-                    ORDER BY data_hora";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_sensor", idSensor);
-                cmd.Parameters.Add("@inicio", SqlDbType.DateTime2).Value = (object?)inicio ?? DBNull.Value;
-                cmd.Parameters.Add("@fim", SqlDbType.DateTime2).Value = (object?)fim ?? DBNull.Value;
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_sensor", idSensor);
+                p.Add("@inicio", SqlDbType.DateTime2).Value = ValorOuNulo(inicio);
+                p.Add("@fim", SqlDbType.DateTime2).Value = ValorOuNulo(fim);
+            });
         }
 
-        //-----------------------------
-        // Última leitura de um sensor
-        //-----------------------------
-        public DataTable? BuscarUltimaPorSensor(int idSensor)
+        public Leitura? BuscarUltimaPorSensor(int idSensor)
         {
-            try
+            const string sql = @"
+                SELECT TOP 1 * FROM Leituras
+                WHERE id_sensor = @id_sensor
+                ORDER BY data_hora DESC";
+
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_sensor", idSensor));
+        }
+
+        private static Leitura Mapear(SqlDataReader r)
+        {
+            return new Leitura
             {
-                string cmdSQL = @"
-                    SELECT TOP 1 *
-                    FROM Leituras
-                    WHERE id_sensor = @id_sensor
-                    ORDER BY data_hora DESC";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_sensor", idSensor);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                IdLeitura = r.GetInt32(r.GetOrdinal("id_leitura")),
+                IdSensor = r.GetInt32(r.GetOrdinal("id_sensor")),
+                Valor = r.GetDecimal(r.GetOrdinal("valor")),
+                DataHora = r.GetDateTime(r.GetOrdinal("data_hora"))
+            };
         }
     }
 }

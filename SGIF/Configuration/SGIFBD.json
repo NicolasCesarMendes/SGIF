@@ -11,8 +11,8 @@
 //}
 ////Enzo sala gustavo
 
-//{
-//  "ConnectionStrings": {
-//    "StringConexaoSQLServer": "Data Source=.;Initial Catalog=SGIFBancoDados;Integrated Security=True;TrustServerCertificate=True"
-//  } // nicolas em casa
-//}
+{
+  "ConnectionStrings": {
+    "StringConexaoSQLServer": "Data Source=.;Initial Catalog=SGIFBancoDados;Integrated Security=True;TrustServerCertificate=True"
+  } // nicolas em casa
+}

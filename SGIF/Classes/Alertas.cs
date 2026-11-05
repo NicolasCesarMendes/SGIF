@@ -1,204 +1,84 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
 namespace SGIF.Classes
 {
-    public partial class Alertas
+    public class Alertas : BaseDados
     {
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Alertas()
+        public Alertas(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\SGIFBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir (preenche IdAlerta com o id gerado)
-        // Nivel: 'Atencao' ou 'Critico'
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Alerta alerta)
         {
-            try
+            const string sql = @"
+                INSERT INTO Alertas (id_leitura, nivel, descricao, data_hora, status)
+                OUTPUT INSERTED.id_alerta
+                VALUES (@id_leitura, @nivel, @descricao, @data_hora, @status)";
+
+            alerta.IdAlerta = ExecutarEscalar(sql, p =>
             {
-                string cmdSQL = @"
-                    INSERT INTO Alertas
-                    (
-                        id_leitura, nivel, descricao, data_hora, status
-                    )
-                    OUTPUT INSERTED.id_alerta
-                    VALUES
-                    (
-                        @id_leitura, @nivel, @descricao, @data_hora, @status
-                    )";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_leitura", IdLeitura);
-                cmd.Parameters.AddWithValue("@nivel", Nivel);
-                cmd.Parameters.AddWithValue("@descricao", (object?)Descricao ?? DBNull.Value);
-                cmd.Parameters.Add("@data_hora", SqlDbType.DateTime2).Value = DataHora;
-                cmd.Parameters.AddWithValue("@status", Status);
-
-                con.Open();
-                IdAlerta = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_leitura", alerta.IdLeitura);
+                p.AddWithValue("@nivel", alerta.Nivel);
+                p.AddWithValue("@descricao", ValorOuNulo(alerta.Descricao));
+                p.Add("@data_hora", SqlDbType.DateTime2).Value = alerta.DataHora;
+                p.AddWithValue("@status", alerta.Status);
+            });
+            return alerta.IdAlerta;
         }
 
-        //-----------------------------
-        // Alterar status (use IdAlerta e Status)
-        // Status: 'Aberto', 'Em analise' ou 'Resolvido'
-        //-----------------------------
-        public void AlterarStatus()
+        public bool AlterarStatus(int idAlerta, string status)
         {
-            try
+            const string sql = "UPDATE Alertas SET status = @status WHERE id_alerta = @id_alerta";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = @"
-                    UPDATE Alertas SET
-                        status = @status
-                    WHERE id_alerta = @id_alerta";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_alerta", IdAlerta);
-                cmd.Parameters.AddWithValue("@status", Status);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_alerta", idAlerta);
+                p.AddWithValue("@status", status);
+            });
         }
 
-        //-----------------------------
-        // Excluir
-        //-----------------------------
-        public void Excluir()
+        public bool Excluir(int idAlerta)
         {
-            try
-            {
-                string cmdSQL = "DELETE FROM Alertas WHERE id_alerta = @id_alerta";
+            const string sql = "DELETE FROM Alertas WHERE id_alerta = @id_alerta";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_alerta", IdAlerta);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Executar(sql, p => p.AddWithValue("@id_alerta", idAlerta));
         }
 
-        //-----------------------------
-        // Selecionar (críticos primeiro, depois os mais recentes)
-        //-----------------------------
-        public DataTable? Selecionar()
+        public Alerta? BuscarPorId(int idAlerta)
         {
-            try
-            {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Alertas
-                    ORDER BY CASE nivel WHEN 'Critico' THEN 0 ELSE 1 END, data_hora DESC";
+            const string sql = "SELECT * FROM Alertas WHERE id_alerta = @id_alerta";
 
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_alerta", idAlerta));
         }
 
-        //-----------------------------
-        // Buscar por ID
-        //-----------------------------
-        public DataTable? BuscarPorId(int id)
+        // Fila de alertas: críticos primeiro, depois os mais recentes. status nulo = todos.
+        public List<Alerta> ListarPorStatus(string? status)
         {
-            try
+            const string sql = @"
+                SELECT * FROM Alertas
+                WHERE (@status IS NULL OR status = @status)
+                ORDER BY CASE nivel WHEN 'Critico' THEN 0 ELSE 1 END, data_hora DESC";
+
+            return Consultar(sql, Mapear, p =>
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Alertas
-                    WHERE id_alerta = @id_alerta";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_alerta", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.Add("@status", SqlDbType.VarChar, 50).Value =
+                    string.IsNullOrWhiteSpace(status) ? (object)DBNull.Value : status;
+            });
         }
 
-        //-----------------------------
-        // Selecionar por status (críticos primeiro)
-        //-----------------------------
-        public DataTable? SelecionarPorStatus(string status)
+        private static Alerta Mapear(SqlDataReader r)
         {
-            try
+            return new Alerta
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Alertas
-                    WHERE status = @status
-                    ORDER BY CASE nivel WHEN 'Critico' THEN 0 ELSE 1 END, data_hora DESC";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@status", status);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                IdAlerta = r.GetInt32(r.GetOrdinal("id_alerta")),
+                IdLeitura = r.GetInt32(r.GetOrdinal("id_leitura")),
+                Nivel = r.GetString(r.GetOrdinal("nivel")),
+                Descricao = r.GetStringNulo("descricao"),
+                DataHora = r.GetDateTime(r.GetOrdinal("data_hora")),
+                Status = r.GetString(r.GetOrdinal("status"))
+            };
         }
     }
 }

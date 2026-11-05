@@ -1,164 +1,67 @@
-using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
 namespace SGIF.Classes
 {
-    public partial class Trens
+    public class Trens : BaseDados
     {
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Trens()
+        public Trens(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\SGIFBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir (preenche IdTrem com o id gerado)
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Trem trem)
         {
-            try
+            const string sql = @"
+                INSERT INTO Trens (identificacao)
+                OUTPUT INSERTED.id_trem
+                VALUES (@identificacao)";
+
+            trem.IdTrem = ExecutarEscalar(sql, p =>
             {
-                string cmdSQL = @"
-                    INSERT INTO Trens
-                    (
-                        identificacao
-                    )
-                    OUTPUT INSERTED.id_trem
-                    VALUES
-                    (
-                        @identificacao
-                    )";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@identificacao", Identificacao);
-
-                con.Open();
-                IdTrem = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@identificacao", trem.Identificacao);
+            });
+            return trem.IdTrem;
         }
 
-        //-----------------------------
-        // Alterar
-        //-----------------------------
-        public void Alterar()
+        public bool Atualizar(Trem trem)
         {
-            try
+            const string sql = "UPDATE Trens SET identificacao = @identificacao WHERE id_trem = @id_trem";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = @"
-                    UPDATE Trens SET
-                        identificacao = @identificacao
-                    WHERE id_trem = @id_trem";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_trem", IdTrem);
-                cmd.Parameters.AddWithValue("@identificacao", Identificacao);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_trem", trem.IdTrem);
+                p.AddWithValue("@identificacao", trem.Identificacao);
+            });
         }
 
-        //-----------------------------
-        // Excluir
-        //-----------------------------
-        public void Excluir()
+        public bool Excluir(int idTrem)
         {
-            try
-            {
-                string cmdSQL = "DELETE FROM Trens WHERE id_trem = @id_trem";
+            const string sql = "DELETE FROM Trens WHERE id_trem = @id_trem";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_trem", IdTrem);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Executar(sql, p => p.AddWithValue("@id_trem", idTrem));
         }
 
-        //-----------------------------
-        // Selecionar
-        //-----------------------------
-        public DataTable? Selecionar()
+        public Trem? BuscarPorId(int idTrem)
         {
-            try
-            {
-                string cmdSQL = "SELECT * FROM Trens ORDER BY identificacao";
+            const string sql = "SELECT * FROM Trens WHERE id_trem = @id_trem";
 
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_trem", idTrem));
         }
 
-        //-----------------------------
-        // Buscar por ID
-        //-----------------------------
-        public DataTable? BuscarPorId(int id)
+        public List<Trem> ListarTodos()
         {
-            try
+            const string sql = "SELECT * FROM Trens ORDER BY identificacao";
+
+            return Consultar(sql, Mapear);
+        }
+
+        private static Trem Mapear(SqlDataReader r)
+        {
+            return new Trem
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Trens
-                    WHERE id_trem = @id_trem";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_trem", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                IdTrem = r.GetInt32(r.GetOrdinal("id_trem")),
+                Identificacao = r.GetString(r.GetOrdinal("identificacao"))
+            };
         }
     }
 }

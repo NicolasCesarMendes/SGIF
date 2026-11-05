@@ -1,250 +1,111 @@
-using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
 namespace SGIF.Classes
 {
-    public partial class Sensores
+    public class Sensores : BaseDados
     {
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Sensores()
+        public Sensores(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\SGIFBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir (preenche IdSensor com o id gerado)
-        // Informe IdLocomotiva OU IdVagao (nunca os dois)
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Sensor sensor)
         {
-            try
-            {
-                string cmdSQL = @"
-                    INSERT INTO Sensores
-                    (
-                        tipo, modelo, valor_minimo, valor_maximo,
-                        limite_atencao, limite_critico, id_locomotiva, id_vagao
-                    )
-                    OUTPUT INSERTED.id_sensor
-                    VALUES
-                    (
-                        @tipo, @modelo, @valor_minimo, @valor_maximo,
-                        @limite_atencao, @limite_critico, @id_locomotiva, @id_vagao
-                    )";
+            const string sql = @"
+                INSERT INTO Sensores
+                    (tipo, modelo, valor_minimo, valor_maximo,
+                     limite_atencao, limite_critico, id_locomotiva, id_vagao)
+                OUTPUT INSERTED.id_sensor
+                VALUES
+                    (@tipo, @modelo, @valor_minimo, @valor_maximo,
+                     @limite_atencao, @limite_critico, @id_locomotiva, @id_vagao)";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@tipo", Tipo);
-                cmd.Parameters.AddWithValue("@modelo", Modelo);
-                cmd.Parameters.AddWithValue("@valor_minimo", (object?)ValorMinimo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@valor_maximo", (object?)ValorMaximo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@limite_atencao", (object?)LimiteAtencao ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@limite_critico", (object?)LimiteCritico ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@id_locomotiva", (object?)IdLocomotiva ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@id_vagao", (object?)IdVagao ?? DBNull.Value);
-
-                con.Open();
-                IdSensor = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-            finally
-            {
-                con.Close();
-            }
+            sensor.IdSensor = ExecutarEscalar(sql, p => AdicionarParametros(p, sensor));
+            return sensor.IdSensor;
         }
 
-        //-----------------------------
-        // Alterar
-        //-----------------------------
-        public void Alterar()
+        public bool Atualizar(Sensor sensor)
         {
-            try
+            const string sql = @"
+                UPDATE Sensores SET
+                    tipo = @tipo,
+                    modelo = @modelo,
+                    valor_minimo = @valor_minimo,
+                    valor_maximo = @valor_maximo,
+                    limite_atencao = @limite_atencao,
+                    limite_critico = @limite_critico,
+                    id_locomotiva = @id_locomotiva,
+                    id_vagao = @id_vagao
+                WHERE id_sensor = @id_sensor";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = @"
-                    UPDATE Sensores SET
-                        tipo = @tipo,
-                        modelo = @modelo,
-                        valor_minimo = @valor_minimo,
-                        valor_maximo = @valor_maximo,
-                        limite_atencao = @limite_atencao,
-                        limite_critico = @limite_critico,
-                        id_locomotiva = @id_locomotiva,
-                        id_vagao = @id_vagao
-                    WHERE id_sensor = @id_sensor";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_sensor", IdSensor);
-                cmd.Parameters.AddWithValue("@tipo", Tipo);
-                cmd.Parameters.AddWithValue("@modelo", Modelo);
-                cmd.Parameters.AddWithValue("@valor_minimo", (object?)ValorMinimo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@valor_maximo", (object?)ValorMaximo ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@limite_atencao", (object?)LimiteAtencao ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@limite_critico", (object?)LimiteCritico ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@id_locomotiva", (object?)IdLocomotiva ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@id_vagao", (object?)IdVagao ?? DBNull.Value);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_sensor", sensor.IdSensor);
+                AdicionarParametros(p, sensor);
+            });
         }
 
-        //-----------------------------
-        // Excluir (erro 547 se o sensor já tiver leituras)
-        //-----------------------------
-        public void Excluir()
+        public bool Excluir(int idSensor)
         {
-            try
-            {
-                string cmdSQL = "DELETE FROM Sensores WHERE id_sensor = @id_sensor";
+            const string sql = "DELETE FROM Sensores WHERE id_sensor = @id_sensor";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_sensor", IdSensor);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Executar(sql, p => p.AddWithValue("@id_sensor", idSensor));
         }
 
-        //-----------------------------
-        // Selecionar
-        //-----------------------------
-        public DataTable? Selecionar()
+        public Sensor? BuscarPorId(int idSensor)
         {
-            try
-            {
-                string cmdSQL = "SELECT * FROM Sensores ORDER BY id_sensor";
+            const string sql = "SELECT * FROM Sensores WHERE id_sensor = @id_sensor";
 
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_sensor", idSensor));
         }
 
-        //-----------------------------
-        // Buscar por ID
-        //-----------------------------
-        public DataTable? BuscarPorId(int id)
+        public List<Sensor> ListarTodos()
         {
-            try
-            {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Sensores
-                    WHERE id_sensor = @id_sensor";
+            const string sql = "SELECT * FROM Sensores ORDER BY id_sensor";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_sensor", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Consultar(sql, Mapear);
         }
 
-        //-----------------------------
-        // Selecionar por locomotiva
-        //-----------------------------
-        public DataTable? SelecionarPorLocomotiva(int idLocomotiva)
+        public List<Sensor> ListarPorLocomotiva(int idLocomotiva)
         {
-            try
-            {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Sensores
-                    WHERE id_locomotiva = @id_locomotiva
-                    ORDER BY id_sensor";
+            const string sql = "SELECT * FROM Sensores WHERE id_locomotiva = @id ORDER BY id_sensor";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_locomotiva", idLocomotiva);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Consultar(sql, Mapear, p => p.AddWithValue("@id", idLocomotiva));
         }
 
-        //-----------------------------
-        // Selecionar por vagão
-        //-----------------------------
-        public DataTable? SelecionarPorVagao(int idVagao)
+        public List<Sensor> ListarPorVagao(int idVagao)
         {
-            try
+            const string sql = "SELECT * FROM Sensores WHERE id_vagao = @id ORDER BY id_sensor";
+
+            return Consultar(sql, Mapear, p => p.AddWithValue("@id", idVagao));
+        }
+
+        private void AdicionarParametros(SqlParameterCollection p, Sensor s)
+        {
+            p.AddWithValue("@tipo", s.Tipo);
+            p.AddWithValue("@modelo", s.Modelo);
+            p.AddWithValue("@valor_minimo", ValorOuNulo(s.ValorMinimo));
+            p.AddWithValue("@valor_maximo", ValorOuNulo(s.ValorMaximo));
+            p.AddWithValue("@limite_atencao", ValorOuNulo(s.LimiteAtencao));
+            p.AddWithValue("@limite_critico", ValorOuNulo(s.LimiteCritico));
+            p.AddWithValue("@id_locomotiva", ValorOuNulo(s.IdLocomotiva));
+            p.AddWithValue("@id_vagao", ValorOuNulo(s.IdVagao));
+        }
+
+        private static Sensor Mapear(SqlDataReader r)
+        {
+            return new Sensor
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Sensores
-                    WHERE id_vagao = @id_vagao
-                    ORDER BY id_sensor";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_vagao", idVagao);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+                IdSensor = r.GetInt32(r.GetOrdinal("id_sensor")),
+                Tipo = r.GetString(r.GetOrdinal("tipo")),
+                Modelo = r.GetString(r.GetOrdinal("modelo")),
+                ValorMinimo = r.GetDecimalNulo("valor_minimo"),
+                ValorMaximo = r.GetDecimalNulo("valor_maximo"),
+                LimiteAtencao = r.GetDecimalNulo("limite_atencao"),
+                LimiteCritico = r.GetDecimalNulo("limite_critico"),
+                IdLocomotiva = r.GetIntNulo("id_locomotiva"),
+                IdVagao = r.GetIntNulo("id_vagao")
+            };
         }
     }
 }

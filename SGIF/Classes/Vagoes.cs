@@ -1,212 +1,103 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using SGIF.Models;
 
 namespace SGIF.Classes
 {
-    public partial class Vagoes
+    public class Vagoes : BaseDados
     {
-        SqlConnection con;
-
-        //-----------------------------
-        // Construtor
-        //-----------------------------
-        public Vagoes()
+        public Vagoes(IConfiguration configuration) : base(configuration)
         {
-            try
-            {
-                IConfigurationRoot o_Config = new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile(@".\Configuration\SGIFBD.json")
-                    .Build();
-
-                string strConexao = o_Config.GetConnectionString(@"StringConexaoSQLServer");
-
-                con = new SqlConnection(strConexao);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
         }
 
-        //-----------------------------
-        // Inserir (preenche IdVagao com o id gerado)
-        //-----------------------------
-        public void Inserir()
+        public int Inserir(Vagao vagao)
         {
-            try
-            {
-                string cmdSQL = @"
-                    INSERT INTO Vagoes
-                    (
-                        numero_identificacao, tipo, capacidade, status, id_trem
-                    )
-                    OUTPUT INSERTED.id_vagao
-                    VALUES
-                    (
-                        @numero_identificacao, @tipo, @capacidade, @status, @id_trem
-                    )";
+            const string sql = @"
+                INSERT INTO Vagoes
+                    (numero_identificacao, tipo, capacidade, status, id_trem)
+                OUTPUT INSERTED.id_vagao
+                VALUES
+                    (@numero_identificacao, @tipo, @capacidade, @status, @id_trem)";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@numero_identificacao", NumeroIdentificacao);
-                cmd.Parameters.AddWithValue("@tipo", Tipo);
-                cmd.Parameters.AddWithValue("@capacidade", (object?)Capacidade ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@status", Status);
-                cmd.Parameters.AddWithValue("@id_trem", (object?)IdTrem ?? DBNull.Value);
-
-                con.Open();
-                IdVagao = Convert.ToInt32(cmd.ExecuteScalar());
-            }
-            finally
-            {
-                con.Close();
-            }
+            vagao.IdVagao = ExecutarEscalar(sql, p => AdicionarParametros(p, vagao));
+            return vagao.IdVagao;
         }
 
-        //-----------------------------
-        // Alterar
-        //-----------------------------
-        public void Alterar()
+        public bool Atualizar(Vagao vagao)
         {
-            try
+            const string sql = @"
+                UPDATE Vagoes SET
+                    numero_identificacao = @numero_identificacao,
+                    tipo = @tipo,
+                    capacidade = @capacidade,
+                    status = @status,
+                    id_trem = @id_trem
+                WHERE id_vagao = @id_vagao";
+
+            return Executar(sql, p =>
             {
-                string cmdSQL = @"
-                    UPDATE Vagoes SET
-                        numero_identificacao = @numero_identificacao,
-                        tipo = @tipo,
-                        capacidade = @capacidade,
-                        status = @status,
-                        id_trem = @id_trem
-                    WHERE id_vagao = @id_vagao";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_vagao", IdVagao);
-                cmd.Parameters.AddWithValue("@numero_identificacao", NumeroIdentificacao);
-                cmd.Parameters.AddWithValue("@tipo", Tipo);
-                cmd.Parameters.AddWithValue("@capacidade", (object?)Capacidade ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@status", Status);
-                cmd.Parameters.AddWithValue("@id_trem", (object?)IdTrem ?? DBNull.Value);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+                p.AddWithValue("@id_vagao", vagao.IdVagao);
+                AdicionarParametros(p, vagao);
+            });
         }
 
-        //-----------------------------
-        // Excluir (erro 547 se houver sensores associados)
-        //-----------------------------
-        public void Excluir()
+        public bool Excluir(int idVagao)
         {
-            try
-            {
-                string cmdSQL = "DELETE FROM Vagoes WHERE id_vagao = @id_vagao";
+            const string sql = "DELETE FROM Vagoes WHERE id_vagao = @id_vagao";
 
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_vagao", IdVagao);
-
-                con.Open();
-                cmd.ExecuteNonQuery();
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Executar(sql, p => p.AddWithValue("@id_vagao", idVagao));
         }
 
-        //-----------------------------
-        // Selecionar
-        //-----------------------------
-        public DataTable? Selecionar()
+        public Vagao? BuscarPorId(int idVagao)
         {
-            try
-            {
-                string cmdSQL = "SELECT * FROM Vagoes ORDER BY numero_identificacao";
+            const string sql = "SELECT * FROM Vagoes WHERE id_vagao = @id_vagao";
 
-                SqlDataAdapter da = new SqlDataAdapter(cmdSQL, con);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+            return ConsultarUm(sql, Mapear, p => p.AddWithValue("@id_vagao", idVagao));
         }
 
-        //-----------------------------
-        // Buscar por ID
-        //-----------------------------
-        public DataTable? BuscarPorId(int id)
+        public List<Vagao> ListarTodos()
         {
-            try
-            {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Vagoes
-                    WHERE id_vagao = @id_vagao";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.AddWithValue("@id_vagao", id);
-
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
-            {
-                con.Close();
-            }
+            return Buscar(null, null);
         }
 
-        //-----------------------------
-        // Buscar por texto (número ou tipo) e/ou status
-        // Parâmetros nulos ou vazios são ignorados
-        //-----------------------------
-        public DataTable? Buscar(string? termo, string? status)
+        // Busca por texto (número ou tipo) e/ou status. Parâmetros nulos ou vazios são ignorados.
+        public List<Vagao> Buscar(string? termo, string? status)
         {
-            try
+            const string sql = @"
+                SELECT * FROM Vagoes
+                WHERE (@termo IS NULL OR numero_identificacao LIKE @termo OR tipo LIKE @termo)
+                  AND (@status IS NULL OR status = @status)
+                ORDER BY numero_identificacao";
+
+            return Consultar(sql, Mapear, p =>
             {
-                string cmdSQL = @"
-                    SELECT *
-                    FROM Vagoes
-                    WHERE (@termo IS NULL OR numero_identificacao LIKE @termo OR tipo LIKE @termo)
-                      AND (@status IS NULL OR status = @status)
-                    ORDER BY numero_identificacao";
-
-                SqlCommand cmd = new SqlCommand(cmdSQL, con);
-
-                cmd.Parameters.Add("@termo", SqlDbType.VarChar, 200).Value =
+                p.Add("@termo", SqlDbType.VarChar, 200).Value =
                     string.IsNullOrWhiteSpace(termo) ? (object)DBNull.Value : "%" + termo.Trim() + "%";
-                cmd.Parameters.Add("@status", SqlDbType.VarChar, 50).Value =
+                p.Add("@status", SqlDbType.VarChar, 50).Value =
                     string.IsNullOrWhiteSpace(status) ? (object)DBNull.Value : status;
+            });
+        }
 
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
+        private void AdicionarParametros(SqlParameterCollection p, Vagao v)
+        {
+            p.AddWithValue("@numero_identificacao", v.NumeroIdentificacao);
+            p.AddWithValue("@tipo", v.Tipo);
+            p.AddWithValue("@capacidade", ValorOuNulo(v.Capacidade));
+            p.AddWithValue("@status", v.Status);
+            p.AddWithValue("@id_trem", ValorOuNulo(v.IdTrem));
+        }
 
-                DataTable dt = new DataTable();
-
-                da.Fill(dt);
-
-                return dt.Rows.Count > 0 ? dt : null;
-            }
-            finally
+        private static Vagao Mapear(SqlDataReader r)
+        {
+            return new Vagao
             {
-                con.Close();
-            }
+                IdVagao = r.GetInt32(r.GetOrdinal("id_vagao")),
+                NumeroIdentificacao = r.GetString(r.GetOrdinal("numero_identificacao")),
+                Tipo = r.GetString(r.GetOrdinal("tipo")),
+                Capacidade = r.GetDecimalNulo("capacidade"),
+                Status = r.GetString(r.GetOrdinal("status")),
+                IdTrem = r.GetIntNulo("id_trem")
+            };
         }
     }
 }
