@@ -81,8 +81,8 @@ else
                         <td class="text-muted">@item.Detalhes</td>
                         <td><span class="badge @classe">@FrotaViewModel.NomeEstado(item.Estado)</span></td>
                         <td class="text-end text-nowrap">
-                            <!-- A Ficha do ativo será o próximo passo -->
-                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Em desenvolvimento">Ver ficha</button>
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Ficha" asp-action="Index"
+                               asp-route-tipo="@item.Tipo" asp-route-id="@item.Id">Ver ficha</a>
 
                             @if (Model.PodeEditar)
                             {

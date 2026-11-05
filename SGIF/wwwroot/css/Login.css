@@ -1,0 +1,14 @@
+/* Telas de Login e Cadastro (páginas sem o layout padrão) */
+body { font-family: Arial, sans-serif; background: #f2f4f7; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+.card { background: #fff; padding: 32px; border-radius: 8px; width: 100%; max-width: 360px; box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+h2 { margin: 0 0 4px; }
+.subtitle { color: #666; margin: 0 0 20px; font-size: 14px; }
+.field { margin-bottom: 16px; }
+label { display: block; margin-bottom: 6px; font-size: 14px; }
+input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+button { width: 100%; padding: 10px; border: 0; border-radius: 4px; background: #1f4e79; color: #fff; font-size: 15px; cursor: pointer; }
+.msg-erro { background: #fdecea; color: #b71c1c; padding: 10px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
+.msg-ok { background: #e8f5e9; color: #1b5e20; padding: 10px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
+.text-danger { color: #b71c1c; font-size: 13px; }
+.alternar { text-align: center; margin: 16px 0 0; font-size: 14px; }
+.alternar a { color: #1f4e79; }

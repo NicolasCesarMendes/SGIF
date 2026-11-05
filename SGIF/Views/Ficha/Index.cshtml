@@ -1,0 +1,92 @@
+@model FichaViewModel
+@{
+    ViewData["Title"] = Model.NomeTipo + " " + Model.Numero;
+
+    string classeEstado = Model.Estado switch
+    {
+        "Ativo" => "bg-success",
+        "Em manutencao" => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
+}
+
+<a class="btn btn-sm btn-outline-secondary mb-3" asp-controller="Frota" asp-action="Index">&larr; Toda a frota</a>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h1 class="h3 m-0">@Model.NomeTipo @Model.Numero</h1>
+    <span class="badge @classeEstado">@FrotaViewModel.NomeEstado(Model.Estado)</span>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            @foreach (var (rotulo, valor) in Model.Detalhes)
+            {
+                <dt class="col-6 col-md-3">@rotulo</dt>
+                <dd class="col-6 col-md-3">@valor</dd>
+            }
+        </dl>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <h2 class="h5 m-0">Sensores</h2>
+
+    @if (Model.PodeEditar)
+    {
+        <a class="btn btn-primary btn-sm" asp-controller="Sensores" asp-action="CriarExibir"
+           asp-route-tipoAtivo="@Model.Tipo" asp-route-idAtivo="@Model.Id">+ Novo sensor</a>
+    }
+</div>
+
+@if (Model.Sensores.Count == 0)
+{
+    <div class="alert alert-light border">Nenhum sensor associado a este ativo.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Modelo</th>
+                    <th>Faixa de medição</th>
+                    <th>Limite de atenção</th>
+                    <th>Limite crítico</th>
+                    @if (Model.PodeEditar)
+                    {
+                        <th class="text-end">Ações</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (SensorItemViewModel s in Model.Sensores)
+                {
+                    <tr>
+                        <td class="fw-semibold">@s.Tipo</td>
+                        <td>@s.Modelo</td>
+                        <td>@s.Faixa</td>
+                        <td>@s.LimiteAtencao</td>
+                        <td>@s.LimiteCritico</td>
+                        @if (Model.PodeEditar)
+                        {
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="Sensores" asp-action="EditarExibir" asp-route-id="@s.Id">Editar</a>
+
+                                <!-- Mensagem fixa de propósito: nada digitado entra em código JavaScript -->
+                                <form asp-controller="Sensores" asp-action="ExcluirProcessar" method="post" class="d-inline"
+                                      onsubmit="return confirm('Deseja realmente excluir este sensor? Esta ação não pode ser desfeita.');">
+                                    <input type="hidden" name="id" value="@s.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                                </form>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<p class="text-muted small mt-4">As leituras, os gráficos e os alertas deste ativo serão exibidos aqui nos próximos passos.</p>

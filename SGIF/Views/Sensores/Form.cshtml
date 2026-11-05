@@ -1,0 +1,102 @@
+@model SensorFormViewModel
+@{
+    bool novo = Model.IdSensor == 0;
+    ViewData["Title"] = novo ? "Novo sensor" : "Editar sensor";
+
+    // Para onde o "Cancelar" volta: a Ficha do ativo selecionado (ou a Frota, se não houver)
+    string[] partesAtivo = (Model.Ativo ?? "").Split(':');
+    bool temRetorno = partesAtivo.Length == 2 && int.TryParse(partesAtivo[1], out _);
+}
+
+<h1 class="h3 mb-3">@ViewData["Title"]</h1>
+
+<form asp-action="@(novo ? "CriarProcessar" : "EditarProcessar")" method="post" class="card card-body" style="max-width: 640px;">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+    <input type="hidden" asp-for="IdSensor" />
+
+    <div class="row">
+        <div class="col-12 col-sm-5 mb-3">
+            <label asp-for="Tipo" class="form-label">Tipo</label>
+            <select asp-for="Tipo" class="form-select">
+                <option value="">Selecione...</option>
+                @foreach (string tipo in TiposSensor.Todos)
+                {
+                    <option value="@tipo">@TiposSensor.Nome(tipo)</option>
+                }
+            </select>
+            <span asp-validation-for="Tipo" class="text-danger small"></span>
+        </div>
+
+        <div class="col-12 col-sm-7 mb-3">
+            <label asp-for="Modelo" class="form-label">Modelo</label>
+            <input asp-for="Modelo" class="form-control" maxlength="100" />
+            <span asp-validation-for="Modelo" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Ativo" class="form-label">Associado a</label>
+        <select asp-for="Ativo" class="form-select">
+            <option value="">Selecione...</option>
+            <optgroup label="Locomotivas">
+                @foreach (OpcaoAtivo o in Model.Locomotivas)
+                {
+                    <option value="@o.Valor">@o.Texto</option>
+                }
+            </optgroup>
+            <optgroup label="Vagões">
+                @foreach (OpcaoAtivo o in Model.Vagoes)
+                {
+                    <option value="@o.Valor">@o.Texto</option>
+                }
+            </optgroup>
+        </select>
+        <span asp-validation-for="Ativo" class="text-danger small"></span>
+    </div>
+
+    <p class="text-muted small mb-2">Faixa de medição do sensor (opcional):</p>
+    <div class="row">
+        <div class="col-12 col-sm-6 mb-3">
+            <label asp-for="ValorMinimo" class="form-label">Valor mínimo</label>
+            <input asp-for="ValorMinimo" class="form-control" inputmode="decimal" placeholder="Exemplo: 0" />
+            <span asp-validation-for="ValorMinimo" class="text-danger small"></span>
+        </div>
+        <div class="col-12 col-sm-6 mb-3">
+            <label asp-for="ValorMaximo" class="form-label">Valor máximo</label>
+            <input asp-for="ValorMaximo" class="form-control" inputmode="decimal" placeholder="Exemplo: 150" />
+            <span asp-validation-for="ValorMaximo" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <p class="text-muted small mb-2">Valores a partir dos quais o sistema gera alerta (opcional):</p>
+    <div class="row">
+        <div class="col-12 col-sm-6 mb-3">
+            <label asp-for="LimiteAtencao" class="form-label">Limite de atenção</label>
+            <input asp-for="LimiteAtencao" class="form-control" inputmode="decimal" placeholder="Exemplo: 80" />
+            <span asp-validation-for="LimiteAtencao" class="text-danger small"></span>
+        </div>
+        <div class="col-12 col-sm-6 mb-3">
+            <label asp-for="LimiteCritico" class="form-label">Limite crítico</label>
+            <input asp-for="LimiteCritico" class="form-control" inputmode="decimal" placeholder="Exemplo: 100" />
+            <span asp-validation-for="LimiteCritico" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        @if (temRetorno)
+        {
+            <a class="btn btn-outline-secondary" asp-controller="Ficha" asp-action="Index"
+               asp-route-tipo="@partesAtivo[0]" asp-route-id="@partesAtivo[1]">Cancelar</a>
+        }
+        else
+        {
+            <a class="btn btn-outline-secondary" asp-controller="Frota" asp-action="Index">Cancelar</a>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

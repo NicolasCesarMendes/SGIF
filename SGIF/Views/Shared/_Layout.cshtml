@@ -20,7 +20,7 @@
     // Só o Administrador vê "Usuários"
     if (nivel == Usuario.Administrador)
     {
-        itens.Add(("Usuários", "Usuarios", "Index", false));
+        itens.Add(("Usuários", "Usuarios", "Index", true));
     }
 }
 <!DOCTYPE html>
@@ -52,7 +52,9 @@
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                             @foreach (var item in itens)
                             {
-                                bool ativo = string.Equals(controllerAtual, item.Controller, StringComparison.OrdinalIgnoreCase);
+                                // A Ficha do ativo e os Sensores fazem parte da Frota: mantêm "Frota" destacado
+                                bool ativo = string.Equals(controllerAtual, item.Controller, StringComparison.OrdinalIgnoreCase)
+                                    || (item.Controller == "Frota" && (controllerAtual == "Ficha" || controllerAtual == "Sensores"));
 
                                 <li class="nav-item">
                                     @if (item.Pronto)
@@ -70,10 +72,11 @@
 
                         <!-- Área do usuário -->
                         <div class="d-flex align-items-center gap-3">
-                            <div class="text-lg-end lh-sm">
+                            <!-- O nome leva para "Minha conta" (RF14) -->
+                            <a class="text-lg-end lh-sm text-decoration-none text-body" asp-controller="Conta" asp-action="Index" title="Minha conta">
                                 <div class="fw-semibold">@nome</div>
                                 <small class="text-muted">@Usuario.NomePerfil(nivel)</small>
-                            </div>
+                            </a>
                             <form asp-controller="Login" asp-action="SairProcessar" method="post" class="m-0">
                                 <button type="submit" class="btn btn-outline-secondary btn-sm">Sair</button>
                             </form>
@@ -86,6 +89,23 @@
 
     <div class="container">
         <main role="main" class="pb-3">
+            @* Mensagens enviadas pelos controllers (TempData), exibidas uma única vez *@
+            @if (TempData["Sucesso"] is string mensagemSucesso)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @mensagemSucesso
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            }
+
+            @if (TempData["Erro"] is string mensagemErro)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @mensagemErro
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            }
+
             @RenderBody()
         </main>
     </div>

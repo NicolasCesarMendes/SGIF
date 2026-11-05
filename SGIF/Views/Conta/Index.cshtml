@@ -1,0 +1,31 @@
+@model ContaViewModel
+@{
+    ViewData["Title"] = "Minha conta";
+}
+
+<h1 class="h3 mb-1">Minha conta</h1>
+<p class="text-muted mb-4">Perfil de acesso: <strong>@Model.NomePerfil</strong></p>
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Meus dados</h2>
+                <partial name="_FormPerfil" model="Model.Perfil" />
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Alterar senha</h2>
+                <partial name="_FormSenha" model="Model.Senha" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

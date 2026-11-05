@@ -47,6 +47,23 @@ namespace SGIF.Classes
             });
         }
 
+        // "Minha conta": o próprio usuário altera só nome e e-mail (nunca o nível nem o ativo)
+        public bool AtualizarPerfil(int idUsuario, string nome, string email)
+        {
+            const string sql = @"
+                UPDATE Usuarios SET
+                    nome = @nome,
+                    email = @email
+                WHERE id_usuario = @id_usuario";
+
+            return Executar(sql, p =>
+            {
+                p.AddWithValue("@id_usuario", idUsuario);
+                p.AddWithValue("@nome", nome);
+                p.AddWithValue("@email", email);
+            });
+        }
+
         public bool AtualizarSenha(int idUsuario, string senhaHash)
         {
             const string sql = "UPDATE Usuarios SET senha = @senha WHERE id_usuario = @id_usuario";

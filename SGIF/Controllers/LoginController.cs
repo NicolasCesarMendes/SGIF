@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using SGIF.Classes;
 using SGIF.Models;
 
@@ -25,6 +26,57 @@ namespace SGIF.Controllers
             }
 
             return View("LoginExibirView");
+        }
+
+        public IActionResult CadastroExibir()
+        {
+            // Quem já está logado não precisa de cadastro
+            if (!string.IsNullOrEmpty(HttpContext.Session.GetString("idUsuario")))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("CadastroExibirView");
+        }
+
+        // Autocadastro (RF14): a conta é sempre criada como Funcionário.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CadastrarProcessar(CadastroViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("CadastroExibirView", vm);
+            }
+
+            try
+            {
+                Usuario usuario = new Usuario
+                {
+                    Nome = vm.Nome.Trim(),
+                    Email = vm.Email.Trim(),
+                    NivelAcesso = Usuario.Funcionario,   // definido aqui, nunca vem do formulário
+                    Ativo = true
+                };
+
+                usuario.Senha = new PasswordHasher<Usuario>().HashPassword(usuario, vm.Senha);
+
+                _usuarios.Inserir(usuario);
+
+                TempData["Sucesso"] = "Conta criada com sucesso. Entre com o seu e-mail e a sua senha.";
+                return RedirectToAction("LoginExibir");
+            }
+            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            {
+                // UNIQUE do banco: e-mail já cadastrado
+                ModelState.AddModelError(nameof(vm.Email), "Já existe uma conta com este e-mail.");
+                return View("CadastroExibirView", vm);
+            }
+            catch (Exception)
+            {
+                ViewBag.Erro = "Não foi possível criar a conta agora. Tente novamente.";
+                return View("CadastroExibirView", vm);
+            }
         }
 
         [HttpPost]

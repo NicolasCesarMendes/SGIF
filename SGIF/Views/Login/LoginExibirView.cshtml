@@ -9,23 +9,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SGIF - Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f2f4f7; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .card { background: #fff; padding: 32px; border-radius: 8px; width: 100%; max-width: 360px; box-shadow: 0 2px 12px rgba(0,0,0,.1); }
-        h2 { margin: 0 0 4px; }
-        .subtitle { color: #666; margin: 0 0 20px; font-size: 14px; }
-        .field { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; font-size: 14px; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 10px; border: 0; border-radius: 4px; background: #1f4e79; color: #fff; font-size: 15px; cursor: pointer; }
-        .msg-erro { background: #fdecea; color: #b71c1c; padding: 10px; border-radius: 4px; margin-bottom: 16px; font-size: 14px; }
-        .text-danger { color: #b71c1c; font-size: 13px; }
-    </style>
+    <link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
 </head>
 <body>
     <div class="card">
         <h2>SGIF</h2>
         <p class="subtitle">Sistema de Gestão Industrial Ferroviário</p>
+
+        @if (TempData["Sucesso"] is string mensagemSucesso)
+        {
+            <div class="msg-ok">@mensagemSucesso</div>
+        }
 
         @if (ViewBag.Erro != null)
         {
@@ -47,6 +41,8 @@
 
             <button type="submit">Entrar</button>
         </form>
+
+        <p class="alternar">Não tem conta? <a asp-controller="Login" asp-action="CadastroExibir">Criar uma conta</a></p>
     </div>
 </body>
 </html>
