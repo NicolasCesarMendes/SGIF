@@ -1,0 +1,86 @@
+@model AtivoFormViewModel
+@{
+    // Mensagens que não pertencem a nenhum campo (ex.: falha ao salvar)
+    var errosGerais = ViewData.ModelState[string.Empty]?.Errors;
+
+    bool ehLocomotiva = Model.Tipo == "Locomotiva";
+    bool novo = Model.Id == 0;
+    string titulo = ehLocomotiva
+        ? (novo ? "Nova locomotiva" : "Editar locomotiva")
+        : (novo ? "Novo vagão" : "Editar vagão");
+}
+
+<form asp-controller="Frota" asp-action="Salvar" method="post" novalidate>
+    <div class="modal-header">
+        <h5 class="modal-title">@titulo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    </div>
+
+    <div class="modal-body">
+        @if (errosGerais != null && errosGerais.Count > 0)
+        {
+            <div class="alert alert-danger">@errosGerais[0].ErrorMessage</div>
+        }
+
+        <input type="hidden" asp-for="Tipo" />
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label asp-for="NumeroIdentificacao" class="form-label">Número de identificação</label>
+            <input asp-for="NumeroIdentificacao" class="form-control" maxlength="50" />
+            <span asp-validation-for="NumeroIdentificacao" class="text-danger small"></span>
+        </div>
+
+        @if (ehLocomotiva)
+        {
+            <div class="mb-3">
+                <label asp-for="Modelo" class="form-label">Modelo</label>
+                <input asp-for="Modelo" class="form-control" maxlength="100" />
+                <span asp-validation-for="Modelo" class="text-danger small"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-12 col-sm-8 mb-3">
+                    <label asp-for="Fabricante" class="form-label">Fabricante</label>
+                    <input asp-for="Fabricante" class="form-control" maxlength="100" />
+                    <span asp-validation-for="Fabricante" class="text-danger small"></span>
+                </div>
+                <div class="col-12 col-sm-4 mb-3">
+                    <label asp-for="AnoFabricacao" class="form-label">Ano</label>
+                    <input asp-for="AnoFabricacao" type="number" min="1800" max="2100" class="form-control" />
+                    <span asp-validation-for="AnoFabricacao" class="text-danger small"></span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label asp-for="TipoVagao" class="form-label">Tipo do vagão</label>
+                <input asp-for="TipoVagao" class="form-control" maxlength="100" />
+                <span asp-validation-for="TipoVagao" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Capacidade" class="form-label">Capacidade</label>
+                <input asp-for="Capacidade" class="form-control" inputmode="decimal" placeholder="Exemplo: 50,5" />
+                <span asp-validation-for="Capacidade" class="text-danger small"></span>
+            </div>
+        }
+
+        <div class="mb-1">
+            <label asp-for="Estado" class="form-label">Estado</label>
+            <select asp-for="Estado" class="form-select">
+                @foreach (var estado in FrotaViewModel.Estados)
+                {
+                    <option value="@estado">@FrotaViewModel.NomeEstado(estado)</option>
+                }
+            </select>
+            <span asp-validation-for="Estado" class="text-danger small"></span>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+</form>

@@ -1,0 +1,141 @@
+@model FrotaViewModel
+@{
+    ViewData["Title"] = "Frota";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 m-0">Frota</h1>
+
+    @if (Model.PodeEditar)
+    {
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary btn-sm" data-novo="Locomotiva">+ Nova locomotiva</button>
+            <button type="button" class="btn btn-primary btn-sm" data-novo="Vagao">+ Novo vagão</button>
+        </div>
+    }
+</div>
+
+<!-- Filtro por tipo -->
+<div class="btn-group mb-3" role="group" aria-label="Filtrar por tipo">
+    @foreach (var (valor, texto) in new[] { ("Todos", "Todos"), ("Locomotiva", "Locomotivas"), ("Vagao", "Vagões") })
+    {
+        <a class="btn btn-outline-primary @(Model.Tipo == valor ? "active" : "")"
+           asp-action="Index" asp-route-tipo="@valor" asp-route-busca="@Model.Busca" asp-route-estado="@Model.Estado">@texto</a>
+    }
+</div>
+
+<!-- Busca e estado -->
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+    <input type="hidden" name="tipo" value="@Model.Tipo" />
+    <div class="col-12 col-md-6">
+        <input type="text" name="busca" value="@Model.Busca" class="form-control"
+               placeholder="Buscar por número, modelo ou tipo" />
+    </div>
+    <div class="col-8 col-md-3">
+        <select name="estado" class="form-select">
+            <option value="">Todos os estados</option>
+            @foreach (var e in FrotaViewModel.Estados)
+            {
+                <option value="@e" selected="@(Model.Estado == e)">@FrotaViewModel.NomeEstado(e)</option>
+            }
+        </select>
+    </div>
+    <div class="col-4 col-md-3">
+        <button type="submit" class="btn btn-outline-secondary w-100">Filtrar</button>
+    </div>
+</form>
+
+@if (Model.Itens.Count == 0)
+{
+    <div class="alert alert-light border">Nenhum ativo encontrado.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Número</th>
+                    <th>Modelo / Tipo</th>
+                    <th>Detalhes</th>
+                    <th>Estado</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Itens)
+                {
+                    string classe = item.Estado switch
+                    {
+                        "Ativo" => "bg-success",
+                        "Em manutencao" => "bg-warning text-dark",
+                        _ => "bg-secondary"
+                    };
+                    string nomeTipo = item.Tipo == "Vagao" ? "Vagão" : "Locomotiva";
+
+                    <tr>
+                        <td>@nomeTipo</td>
+                        <td class="fw-semibold">@item.Numero</td>
+                        <td>@item.Descricao</td>
+                        <td class="text-muted">@item.Detalhes</td>
+                        <td><span class="badge @classe">@FrotaViewModel.NomeEstado(item.Estado)</span></td>
+                        <td class="text-end text-nowrap">
+                            <!-- A Ficha do ativo será o próximo passo -->
+                            <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Em desenvolvimento">Ver ficha</button>
+
+                            @if (Model.PodeEditar)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        data-editar data-tipo="@item.Tipo" data-id="@item.Id">Editar</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        data-excluir data-tipo="@item.Tipo" data-id="@item.Id"
+                                        data-nome="@nomeTipo @item.Numero">Excluir</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (Model.PodeEditar)
+{
+    <!-- Modal de cadastro/edição: o conteúdo (formulário) é carregado por fetch -->
+    <div class="modal fade" id="modalAtivo" tabindex="-1" aria-hidden="true"
+         data-url-form="@Url.Action("FormAtivo", "Frota")">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" id="modalAtivoCorpo"></div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmação de exclusão -->
+    <div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="formExcluir" asp-controller="Frota" asp-action="Excluir" method="post">
+                    <input type="hidden" name="tipo" id="excluirTipo" />
+                    <input type="hidden" name="id" id="excluirId" />
+
+                    <div class="modal-header">
+                        <h5 class="modal-title">Excluir ativo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0" id="excluirTexto"></p>
+                        <div class="alert alert-danger mt-3 mb-0 d-none" id="excluirErro"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/frota.js" asp-append-version="true"></script>
+}

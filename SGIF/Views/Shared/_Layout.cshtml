@@ -1,5 +1,30 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+@{
+    string? nome = Context.Session.GetString("nome");
+    int.TryParse(Context.Session.GetString("nivelAcesso"), out int nivel);
+    bool logado = !string.IsNullOrEmpty(nome);
+    string controllerAtual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+    // Menu principal. Pronto = false deixa o item desativado até a tela existir
+    // (quando a tela ficar pronta, é só trocar para true).
+    var itens = new List<(string Texto, string Controller, string Action, bool Pronto)>
+    {
+        ("Tela Inicial", "Home", "Index", true),
+        ("Frota", "Frota", "Index", true),
+        ("Alertas", "Alertas", "Index", false),
+        ("Manutenção", "Manutencao", "Index", false),
+        ("Relatórios", "Relatorios", "Index", false),
+        ("Sobre", "Sobre", "Index", false),
+        ("Equipe", "Equipe", "Index", false)
+    };
+
+    // Só o Administrador vê "Usuários"
+    if (nivel == Usuario.Administrador)
+    {
+        itens.Add(("Usuários", "Usuarios", "Index", false));
+    }
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,26 +36,54 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SGIF</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="@(logado ? "Index" : "LandingPage")">SGIF</a>
+
+                @if (logado)
+                {
+                    <!-- No celular o menu fica recolhido atrás deste botão -->
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                            aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="menuPrincipal">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            @foreach (var item in itens)
+                            {
+                                bool ativo = string.Equals(controllerAtual, item.Controller, StringComparison.OrdinalIgnoreCase);
+
+                                <li class="nav-item">
+                                    @if (item.Pronto)
+                                    {
+                                        <a class="nav-link @(ativo ? "active fw-semibold" : "")"
+                                           asp-controller="@item.Controller" asp-action="@item.Action">@item.Texto</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="nav-link disabled" title="Em desenvolvimento">@item.Texto</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+
+                        <!-- Área do usuário -->
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-lg-end lh-sm">
+                                <div class="fw-semibold">@nome</div>
+                                <small class="text-muted">@Usuario.NomePerfil(nivel)</small>
+                            </div>
+                            <form asp-controller="Login" asp-action="SairProcessar" method="post" class="m-0">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">Sair</button>
+                            </form>
+                        </div>
+                    </div>
+                }
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -39,7 +92,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - SGIF - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

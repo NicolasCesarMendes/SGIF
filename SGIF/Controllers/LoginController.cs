@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SGIF.Classes;
@@ -5,6 +6,7 @@ using SGIF.Models;
 
 namespace SGIF.Controllers
 {
+    [AllowAnonymous]
     public class LoginController : Controller
     {
         private readonly Usuarios _usuarios;
@@ -16,6 +18,12 @@ namespace SGIF.Controllers
 
         public IActionResult LoginExibir()
         {
+            // Quem já está logado vai direto para a Tela Inicial
+            if (!string.IsNullOrEmpty(HttpContext.Session.GetString("idUsuario")))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             return View("LoginExibirView");
         }
 
@@ -45,7 +53,7 @@ namespace SGIF.Controllers
                         HttpContext.Session.SetString("nome", usuario.Nome);
                         HttpContext.Session.SetString("nivelAcesso", usuario.NivelAcesso.ToString());
 
-                        // Provisório: trocar pelo Dashboard quando ele existir
+                        // Depois de entrar, vai sempre à Tela Inicial
                         return RedirectToAction("Index", "Home");
                     }
                 }
@@ -61,6 +69,9 @@ namespace SGIF.Controllers
             }
         }
 
+        // Sair por POST (botão do menu), com token anti-forgery
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult SairProcessar()
         {
             HttpContext.Session.Clear();

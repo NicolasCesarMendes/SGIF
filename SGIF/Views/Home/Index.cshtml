@@ -1,8 +1,9 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Tela Inicial";
+    string nome = Context.Session.GetString("nome") ?? "";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<h1 class="h3 mb-3">Tela Inicial</h1>
+
+<p>Olá, <strong>@nome</strong>. O painel operacional (indicadores, gráficos de temperatura e vibração,
+   ativos que exigem atenção e últimos alertas) será construído nos próximos passos.</p>

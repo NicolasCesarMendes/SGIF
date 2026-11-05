@@ -7,7 +7,7 @@ namespace SGIF.Models
         public string Modelo { get; set; } = string.Empty;
         public string? Fabricante { get; set; }
         public int? AnoFabricacao { get; set; }
-        public string Status { get; set; } = "Ativa";
+        public string Status { get; set; } = "Ativo";
         public int? IdTrem { get; set; }
     }
 }

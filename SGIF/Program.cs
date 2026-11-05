@@ -9,7 +9,11 @@ builder.Configuration.AddJsonFile(
 );
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// O filtro de autenticação roda em todas as actions (exceto as marcadas com [AllowAnonymous])
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<AutenticacaoFiltro>();
+});
 
 // Sessão (guarda quem está logado, como no GRMP)
 builder.Services.AddDistributedMemoryCache();
@@ -52,9 +56,10 @@ app.UseAuthorization();
 
 app.MapStaticAssets();
 
+// A página inicial do site é a Landing Page (pública)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Login}/{action=LoginExibir}/{id?}")
+    pattern: "{controller=Home}/{action=LandingPage}/{id?}")
     .WithStaticAssets();
 
 app.Run();
