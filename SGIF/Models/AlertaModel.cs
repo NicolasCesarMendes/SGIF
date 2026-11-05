@@ -8,5 +8,7 @@ namespace SGIF.Models
         public string? Descricao { get; set; }
         public DateTime DataHora { get; set; } = DateTime.Now;
         public string Status { get; set; } = "Aberto";       // 'Aberto', 'Em analise' ou 'Resolvido'
+        public int? IdUsuarioResponsavel { get; set; }
+        public DateTime? DataResolucao { get; set; }
     }
 }

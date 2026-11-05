@@ -94,5 +94,11 @@ namespace SGIF.Classes
             int i = r.GetOrdinal(coluna);
             return r.IsDBNull(i) ? null : r.GetString(i);
         }
+
+        public static DateTime? GetDateTimeNulo(this SqlDataReader r, string coluna)
+        {
+            int i = r.GetOrdinal(coluna);
+            return r.IsDBNull(i) ? null : r.GetDateTime(i);
+        }
     }
 }

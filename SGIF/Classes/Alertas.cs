@@ -28,14 +28,22 @@ namespace SGIF.Classes
             return alerta.IdAlerta;
         }
 
-        public bool AlterarStatus(int idAlerta, string status)
+        public bool AlterarStatus(int idAlerta, string status, int idUsuario)
         {
-            const string sql = "UPDATE Alertas SET status = @status WHERE id_alerta = @id_alerta";
+            // Aberto: sem responsável. Em analise/Resolvido: quem mexeu. Só Resolvido tem data.
+            const string sql = @"
+            UPDATE Alertas SET
+                status = @status,
+                id_usuario_responsavel = CASE WHEN @status = 'Aberto' THEN NULL ELSE @id_usuario END,
+                data_resolucao = CASE WHEN @status = 'Resolvido' THEN @agora ELSE NULL END
+            WHERE id_alerta = @id_alerta";
 
             return Executar(sql, p =>
             {
                 p.AddWithValue("@id_alerta", idAlerta);
                 p.AddWithValue("@status", status);
+                p.AddWithValue("@id_usuario", idUsuario);
+                p.Add("@agora", SqlDbType.DateTime2).Value = DateTime.Now;
             });
         }
 
@@ -77,7 +85,9 @@ namespace SGIF.Classes
                 Nivel = r.GetString(r.GetOrdinal("nivel")),
                 Descricao = r.GetStringNulo("descricao"),
                 DataHora = r.GetDateTime(r.GetOrdinal("data_hora")),
-                Status = r.GetString(r.GetOrdinal("status"))
+                Status = r.GetString(r.GetOrdinal("status")),
+                IdUsuarioResponsavel = r.GetIntNulo("id_usuario_responsavel"),
+                DataResolucao = r.GetDateTimeNulo("data_resolucao")
             };
         }
     }
