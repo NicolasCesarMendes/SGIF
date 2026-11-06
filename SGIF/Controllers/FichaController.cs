@@ -5,18 +5,20 @@ using SGIF.Models;
 namespace SGIF.Controllers
 {
     // Ficha do ativo: dados da locomotiva/vagão e seus sensores. Todos os perfis podem consultar.
-    // (Leituras, gráficos e alertas do ativo entram nos próximos passos.)
+    // (Gráficos e alertas do ativo entram nos próximos passos.)
     public class FichaController : Controller
     {
         private readonly Locomotivas _locomotivas;
         private readonly Vagoes _vagoes;
         private readonly Sensores _sensores;
+        private readonly Leituras _leituras;
 
-        public FichaController(Locomotivas locomotivas, Vagoes vagoes, Sensores sensores)
+        public FichaController(Locomotivas locomotivas, Vagoes vagoes, Sensores sensores, Leituras leituras)
         {
             _locomotivas = locomotivas;
             _vagoes = vagoes;
             _sensores = sensores;
+            _leituras = leituras;
         }
 
         public IActionResult Index(string tipo, int id)
@@ -67,6 +69,7 @@ namespace SGIF.Controllers
             foreach (Sensor s in sensores)
             {
                 string unidade = TiposSensor.Unidade(s.Tipo);
+                Leitura? ultima = _leituras.BuscarUltimaPorSensor(s.IdSensor);
 
                 vm.Sensores.Add(new SensorItemViewModel
                 {
@@ -75,7 +78,10 @@ namespace SGIF.Controllers
                     Modelo = s.Modelo,
                     Faixa = FormatarFaixa(s.ValorMinimo, s.ValorMaximo, unidade),
                     LimiteAtencao = FormatarValor(s.LimiteAtencao, unidade),
-                    LimiteCritico = FormatarValor(s.LimiteCritico, unidade)
+                    LimiteCritico = FormatarValor(s.LimiteCritico, unidade),
+                    UltimaLeitura = ultima != null ? FormatarValor(ultima.Valor, unidade) : "-",
+                    UltimaLeituraEm = ultima?.DataHora.ToString("dd/MM/yyyy HH:mm:ss"),
+                    NivelLeitura = ultima != null ? ProcessadorLeituras.NivelDoAlerta(s, ultima.Valor) ?? "" : ""
                 });
             }
 

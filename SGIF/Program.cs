@@ -34,6 +34,10 @@ builder.Services.AddScoped<Sensores>();
 builder.Services.AddScoped<Leituras>();
 builder.Services.AddScoped<Alertas>();
 
+// Regra de alertas das leituras e simulador de leituras (liga/desliga em appsettings.json)
+builder.Services.AddScoped<ProcessadorLeituras>();
+builder.Services.AddHostedService<SimuladorLeituras>();
+
 var app = builder.Build();
 
 // Cria o administrador inicial se a tabela Usuarios estiver vazia

@@ -8,6 +8,7 @@ namespace SGIF.Controllers
 {
     // Gestão de usuários (RF15): somente o Administrador.
     // O administrador não altera a própria conta aqui (usa "Minha conta").
+    // Criar, editar e excluir acontecem em modais: sucesso = 200; erro de validação = 422 com o formulário.
     [RequerPerfil(Usuario.Administrador)]
     public class UsuariosController : Controller
     {
@@ -32,17 +33,47 @@ namespace SGIF.Controllers
             return View(vm);
         }
 
-        // Criar
-        public IActionResult CriarExibir()
+        // Formulário do modal (novo, ou edição se vier o id)
+        public IActionResult FormUsuario(int? id)
         {
-            return View("Form", new UsuarioFormViewModel());
+            UsuarioFormViewModel vm = new UsuarioFormViewModel();
+
+            if (id.HasValue && id.Value > 0)
+            {
+                if (id.Value == IdLogado())
+                {
+                    return Conflict(MensagemPropriaConta);
+                }
+
+                Usuario? usuario = _usuarios.BuscarPorId(id.Value);
+
+                if (usuario == null)
+                {
+                    return NotFound("Usuário não encontrado. Atualize a página.");
+                }
+
+                vm.IdUsuario = usuario.IdUsuario;
+                vm.Nome = usuario.Nome;
+                vm.Email = usuario.Email;
+                vm.NivelAcesso = usuario.NivelAcesso;
+            }
+
+            return PartialView("_FormUsuario", vm);
         }
 
+        // Salvar (novo ou edição)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CriarProcessar(UsuarioFormViewModel vm)
+        public IActionResult Salvar(UsuarioFormViewModel vm)
         {
-            if (string.IsNullOrWhiteSpace(vm.Senha))
+            bool novo = vm.IdUsuario == 0;
+
+            if (!novo && vm.IdUsuario == IdLogado())
+            {
+                return ErroGeral(vm, MensagemPropriaConta);
+            }
+
+            if (novo && string.IsNullOrWhiteSpace(vm.Senha))
             {
                 ModelState.AddModelError(nameof(vm.Senha), "A senha é obrigatória");
             }
@@ -51,122 +82,67 @@ namespace SGIF.Controllers
 
             if (!ModelState.IsValid)
             {
-                return View("Form", vm);
+                return FormComErros(vm);
             }
 
             try
             {
-                Usuario usuario = new Usuario
+                PasswordHasher<Usuario> hasher = new PasswordHasher<Usuario>();
+
+                if (novo)
                 {
-                    Nome = vm.Nome.Trim(),
-                    Email = vm.Email.Trim(),
-                    NivelAcesso = vm.NivelAcesso,
-                    Ativo = true
-                };
+                    Usuario usuario = new Usuario
+                    {
+                        Nome = vm.Nome.Trim(),
+                        Email = vm.Email.Trim(),
+                        NivelAcesso = vm.NivelAcesso,
+                        Ativo = true
+                    };
 
-                usuario.Senha = new PasswordHasher<Usuario>().HashPassword(usuario, vm.Senha!);
+                    usuario.Senha = hasher.HashPassword(usuario, vm.Senha!);
 
-                _usuarios.Inserir(usuario);
+                    _usuarios.Inserir(usuario);
 
-                TempData["Sucesso"] = "Usuário criado com sucesso.";
-                return RedirectToAction("Index");
+                    TempData["Sucesso"] = "Usuário criado com sucesso.";
+                }
+                else
+                {
+                    Usuario? usuario = _usuarios.BuscarPorId(vm.IdUsuario);
+
+                    if (usuario == null)
+                    {
+                        return ErroGeral(vm, "Usuário não encontrado. Atualize a página.");
+                    }
+
+                    usuario.Nome = vm.Nome.Trim();
+                    usuario.Email = vm.Email.Trim();
+                    usuario.NivelAcesso = vm.NivelAcesso;
+
+                    _usuarios.Atualizar(usuario);
+
+                    // Senha em branco = mantém a senha atual
+                    if (!string.IsNullOrWhiteSpace(vm.Senha))
+                    {
+                        _usuarios.AtualizarSenha(usuario.IdUsuario, hasher.HashPassword(usuario, vm.Senha));
+                    }
+
+                    TempData["Sucesso"] = "Usuário atualizado com sucesso.";
+                }
+
+                return Ok();
             }
             catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
                 ModelState.AddModelError(nameof(vm.Email), "Já existe uma conta com este e-mail.");
-                return View("Form", vm);
+                return FormComErros(vm);
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "Não foi possível salvar. Tente novamente.");
-                return View("Form", vm);
+                return ErroGeral(vm, "Não foi possível salvar. Tente novamente.");
             }
         }
 
-        // Editar
-        public IActionResult EditarExibir(int id)
-        {
-            if (id == IdLogado())
-            {
-                TempData["Erro"] = MensagemPropriaConta;
-                return RedirectToAction("Index");
-            }
-
-            Usuario? usuario = _usuarios.BuscarPorId(id);
-
-            if (usuario == null)
-            {
-                TempData["Erro"] = "Usuário não encontrado.";
-                return RedirectToAction("Index");
-            }
-
-            UsuarioFormViewModel vm = new UsuarioFormViewModel
-            {
-                IdUsuario = usuario.IdUsuario,
-                Nome = usuario.Nome,
-                Email = usuario.Email,
-                NivelAcesso = usuario.NivelAcesso
-            };
-
-            return View("Form", vm);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult EditarProcessar(UsuarioFormViewModel vm)
-        {
-            if (vm.IdUsuario == IdLogado())
-            {
-                TempData["Erro"] = MensagemPropriaConta;
-                return RedirectToAction("Index");
-            }
-
-            ValidarNivel(vm);
-
-            if (!ModelState.IsValid)
-            {
-                return View("Form", vm);
-            }
-
-            try
-            {
-                Usuario? usuario = _usuarios.BuscarPorId(vm.IdUsuario);
-
-                if (usuario == null)
-                {
-                    TempData["Erro"] = "Usuário não encontrado.";
-                    return RedirectToAction("Index");
-                }
-
-                usuario.Nome = vm.Nome.Trim();
-                usuario.Email = vm.Email.Trim();
-                usuario.NivelAcesso = vm.NivelAcesso;
-
-                _usuarios.Atualizar(usuario);
-
-                // Senha em branco = mantém a senha atual
-                if (!string.IsNullOrWhiteSpace(vm.Senha))
-                {
-                    string hash = new PasswordHasher<Usuario>().HashPassword(usuario, vm.Senha);
-                    _usuarios.AtualizarSenha(usuario.IdUsuario, hash);
-                }
-
-                TempData["Sucesso"] = "Usuário atualizado com sucesso.";
-                return RedirectToAction("Index");
-            }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
-            {
-                ModelState.AddModelError(nameof(vm.Email), "Já existe uma conta com este e-mail.");
-                return View("Form", vm);
-            }
-            catch (Exception)
-            {
-                ModelState.AddModelError(string.Empty, "Não foi possível salvar. Tente novamente.");
-                return View("Form", vm);
-            }
-        }
-
-        // Ativar / Desativar
+        // Ativar / Desativar (botão simples da lista, sem modal)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult AlterarAtivoProcessar(int id, bool ativo)
@@ -196,39 +172,35 @@ namespace SGIF.Controllers
             return RedirectToAction("Index");
         }
 
-        // Excluir (a confirmação é feita na tela, antes de enviar)
+        // Excluir (a confirmação é feita no modal). Sucesso = 200; erro = mensagem em texto.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ExcluirProcessar(int id)
+        public IActionResult Excluir(int id)
         {
             if (id == IdLogado())
             {
-                TempData["Erro"] = MensagemPropriaConta;
-                return RedirectToAction("Index");
+                return Conflict(MensagemPropriaConta);
             }
 
             try
             {
-                if (_usuarios.Excluir(id))
+                if (!_usuarios.Excluir(id))
                 {
-                    TempData["Sucesso"] = "Usuário excluído com sucesso.";
+                    return NotFound("Usuário não encontrado. Atualize a página.");
                 }
-                else
-                {
-                    TempData["Erro"] = "Usuário não encontrado.";
-                }
+
+                TempData["Sucesso"] = "Usuário excluído com sucesso.";
+                return Ok();
             }
             catch (SqlException ex) when (ex.Number == 547)
             {
                 // Chave estrangeira: o usuário é responsável por algum alerta
-                TempData["Erro"] = "Este usuário possui alertas associados. Desative-o em vez de excluir.";
+                return Conflict("Este usuário possui alertas associados. Desative-o em vez de excluir.");
             }
             catch (Exception)
             {
-                TempData["Erro"] = "Não foi possível excluir. Tente novamente.";
+                return StatusCode(500, "Não foi possível excluir. Tente novamente.");
             }
-
-            return RedirectToAction("Index");
         }
 
         // ---------- Auxiliares ----------
@@ -247,6 +219,19 @@ namespace SGIF.Controllers
             {
                 ModelState.AddModelError(nameof(vm.NivelAcesso), "Selecione um perfil válido");
             }
+        }
+
+        // Devolve o formulário com as mensagens de erro (o JavaScript o coloca de volta no modal)
+        private IActionResult FormComErros(UsuarioFormViewModel vm)
+        {
+            Response.StatusCode = 422;
+            return PartialView("_FormUsuario", vm);
+        }
+
+        private IActionResult ErroGeral(UsuarioFormViewModel vm, string mensagem)
+        {
+            ModelState.AddModelError(string.Empty, mensagem);
+            return FormComErros(vm);
         }
     }
 }

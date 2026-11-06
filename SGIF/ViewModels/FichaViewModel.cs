@@ -24,5 +24,10 @@ namespace SGIF.Models
         public string Faixa { get; set; } = string.Empty;
         public string LimiteAtencao { get; set; } = string.Empty;
         public string LimiteCritico { get; set; } = string.Empty;
+
+        // Última leitura registrada (vazio se o sensor ainda não tem leituras)
+        public string UltimaLeitura { get; set; } = "-";
+        public string? UltimaLeituraEm { get; set; }
+        public string NivelLeitura { get; set; } = string.Empty;   // "", Atencao ou Critico (cor do valor)
     }
 }

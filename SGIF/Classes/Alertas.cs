@@ -76,6 +76,24 @@ namespace SGIF.Classes
             });
         }
 
+        // O sensor já tem um alerta deste nível que ainda não foi resolvido?
+        public bool ExisteNaoResolvidoParaSensor(int idSensor, string nivel)
+        {
+            const string sql = @"
+                SELECT COUNT(1)
+                FROM Alertas a
+                JOIN Leituras l ON l.id_leitura = a.id_leitura
+                WHERE l.id_sensor = @id_sensor
+                  AND a.nivel = @nivel
+                  AND a.status <> 'Resolvido'";
+
+            return ExecutarEscalar(sql, p =>
+            {
+                p.AddWithValue("@id_sensor", idSensor);
+                p.AddWithValue("@nivel", nivel);
+            }) > 0;
+        }
+
         private static Alerta Mapear(SqlDataReader r)
         {
             return new Alerta

@@ -34,8 +34,8 @@
 
     @if (Model.PodeEditar)
     {
-        <a class="btn btn-primary btn-sm" asp-controller="Sensores" asp-action="CriarExibir"
-           asp-route-tipoAtivo="@Model.Tipo" asp-route-idAtivo="@Model.Id">+ Novo sensor</a>
+        <button type="button" class="btn btn-primary btn-sm"
+                data-modal-url="@Url.Action("FormSensor", "Sensores", new { tipoAtivo = Model.Tipo, idAtivo = Model.Id })">+ Novo sensor</button>
     }
 </div>
 
@@ -54,6 +54,7 @@ else
                     <th>Faixa de medição</th>
                     <th>Limite de atenção</th>
                     <th>Limite crítico</th>
+                    <th>Última leitura</th>
                     @if (Model.PodeEditar)
                     {
                         <th class="text-end">Ações</th>
@@ -69,17 +70,29 @@ else
                         <td>@s.Faixa</td>
                         <td>@s.LimiteAtencao</td>
                         <td>@s.LimiteCritico</td>
+                        <td>
+                            @if (s.UltimaLeituraEm != null)
+                            {
+                                string corLeitura = s.NivelLeitura == "Critico" ? "text-danger"
+                                                  : s.NivelLeitura == "Atencao" ? "text-warning-emphasis" : "";
+
+                                <span class="fw-semibold @corLeitura">@s.UltimaLeitura</span>
+                                <div class="text-muted small">@s.UltimaLeituraEm</div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sem leituras</span>
+                            }
+                        </td>
                         @if (Model.PodeEditar)
                         {
                             <td class="text-end text-nowrap">
-                                <a class="btn btn-sm btn-outline-primary" asp-controller="Sensores" asp-action="EditarExibir" asp-route-id="@s.Id">Editar</a>
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        data-modal-url="@Url.Action("FormSensor", "Sensores", new { id = s.Id })">Editar</button>
 
-                                <!-- Mensagem fixa de propósito: nada digitado entra em código JavaScript -->
-                                <form asp-controller="Sensores" asp-action="ExcluirProcessar" method="post" class="d-inline"
-                                      onsubmit="return confirm('Deseja realmente excluir este sensor? Esta ação não pode ser desfeita.');">
-                                    <input type="hidden" name="id" value="@s.Id" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        data-excluir-url="@Url.Action("Excluir", "Sensores")" data-excluir-id="@s.Id"
+                                        data-excluir-texto="Deseja realmente excluir este sensor? Esta ação não pode ser desfeita.">Excluir</button>
                             </td>
                         }
                     </tr>
@@ -89,4 +102,4 @@ else
     </div>
 }
 
-<p class="text-muted small mt-4">As leituras, os gráficos e os alertas deste ativo serão exibidos aqui nos próximos passos.</p>
+<p class="text-muted small mt-4">O histórico de leituras, os gráficos e os alertas deste ativo serão exibidos aqui nos próximos passos.</p>

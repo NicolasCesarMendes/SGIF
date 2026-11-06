@@ -7,6 +7,7 @@ namespace SGIF.Controllers
 {
     // Cadastro e gestão de sensores e associação aos ativos (RF5, RF6, RF16):
     // somente Administrador e Funcionário da Manutenção. A consulta fica na Ficha do ativo.
+    // Tudo acontece em modais abertos na Ficha: Sucesso = 200; erro de validação = 422 com o formulário.
     [RequerPerfil(Usuario.Administrador, Usuario.Manutencao)]
     public class SensoresController : Controller
     {
@@ -21,136 +22,102 @@ namespace SGIF.Controllers
             _vagoes = vagoes;
         }
 
-        // Criar. Vindo da Ficha, o ativo já chega selecionado.
-        public IActionResult CriarExibir(string? tipoAtivo, int? idAtivo)
+        // Formulário do modal. Novo: vindo da Ficha, o ativo já chega selecionado. Edição: informe o id do sensor.
+        public IActionResult FormSensor(string? tipoAtivo, int? idAtivo, int? id)
         {
             SensorFormViewModel vm = new SensorFormViewModel();
 
-            if (idAtivo.HasValue && (tipoAtivo == "Locomotiva" || tipoAtivo == "Vagao"))
+            if (id.HasValue && id.Value > 0)
+            {
+                Sensor? sensor = _sensores.BuscarPorId(id.Value);
+
+                if (sensor == null)
+                {
+                    return NotFound("Sensor não encontrado. Atualize a página.");
+                }
+
+                vm.IdSensor = sensor.IdSensor;
+                vm.Tipo = sensor.Tipo;
+                vm.Modelo = sensor.Modelo;
+                vm.ValorMinimo = EntradaNumerica.Formatar(sensor.ValorMinimo);
+                vm.ValorMaximo = EntradaNumerica.Formatar(sensor.ValorMaximo);
+                vm.LimiteAtencao = EntradaNumerica.Formatar(sensor.LimiteAtencao);
+                vm.LimiteCritico = EntradaNumerica.Formatar(sensor.LimiteCritico);
+                vm.Ativo = sensor.IdLocomotiva.HasValue
+                    ? "Locomotiva:" + sensor.IdLocomotiva.Value
+                    : "Vagao:" + sensor.IdVagao;
+            }
+            else if (idAtivo.HasValue && (tipoAtivo == "Locomotiva" || tipoAtivo == "Vagao"))
             {
                 vm.Ativo = tipoAtivo + ":" + idAtivo.Value;
             }
 
             CarregarOpcoes(vm);
-            return View("Form", vm);
+            return PartialView("_FormSensor", vm);
         }
 
+        // Salvar (novo ou edição; a edição inclui trocar o ativo ao qual o sensor está associado)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CriarProcessar(SensorFormViewModel vm)
+        public IActionResult Salvar(SensorFormViewModel vm)
         {
             Sensor? sensor = MontarSensor(vm);
 
             if (sensor == null)
             {
-                CarregarOpcoes(vm);
-                return View("Form", vm);
+                return FormComErros(vm);
             }
 
             try
             {
-                _sensores.Inserir(sensor);
-
-                TempData["Sucesso"] = "Sensor cadastrado com sucesso.";
-                return IrParaFicha(sensor);
-            }
-            catch (Exception)
-            {
-                ModelState.AddModelError(string.Empty, "Não foi possível salvar. Tente novamente.");
-                CarregarOpcoes(vm);
-                return View("Form", vm);
-            }
-        }
-
-        // Editar (inclui trocar o ativo ao qual o sensor está associado)
-        public IActionResult EditarExibir(int id)
-        {
-            Sensor? sensor = _sensores.BuscarPorId(id);
-
-            if (sensor == null)
-            {
-                TempData["Erro"] = "Sensor não encontrado.";
-                return RedirectToAction("Index", "Frota");
-            }
-
-            SensorFormViewModel vm = new SensorFormViewModel
-            {
-                IdSensor = sensor.IdSensor,
-                Tipo = sensor.Tipo,
-                Modelo = sensor.Modelo,
-                ValorMinimo = EntradaNumerica.Formatar(sensor.ValorMinimo),
-                ValorMaximo = EntradaNumerica.Formatar(sensor.ValorMaximo),
-                LimiteAtencao = EntradaNumerica.Formatar(sensor.LimiteAtencao),
-                LimiteCritico = EntradaNumerica.Formatar(sensor.LimiteCritico),
-                Ativo = sensor.IdLocomotiva.HasValue
-                    ? "Locomotiva:" + sensor.IdLocomotiva.Value
-                    : "Vagao:" + sensor.IdVagao
-            };
-
-            CarregarOpcoes(vm);
-            return View("Form", vm);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult EditarProcessar(SensorFormViewModel vm)
-        {
-            Sensor? sensor = MontarSensor(vm);
-
-            if (sensor == null)
-            {
-                CarregarOpcoes(vm);
-                return View("Form", vm);
-            }
-
-            try
-            {
-                if (!_sensores.Atualizar(sensor))
+                if (vm.IdSensor > 0)
                 {
-                    TempData["Erro"] = "Sensor não encontrado.";
-                    return RedirectToAction("Index", "Frota");
+                    if (!_sensores.Atualizar(sensor))
+                    {
+                        return ErroGeral(vm, "Sensor não encontrado. Atualize a página.");
+                    }
+
+                    TempData["Sucesso"] = "Sensor atualizado com sucesso.";
+                }
+                else
+                {
+                    _sensores.Inserir(sensor);
+
+                    TempData["Sucesso"] = "Sensor cadastrado com sucesso.";
                 }
 
-                TempData["Sucesso"] = "Sensor atualizado com sucesso.";
-                return IrParaFicha(sensor);
+                return Ok();
             }
             catch (Exception)
             {
-                ModelState.AddModelError(string.Empty, "Não foi possível salvar. Tente novamente.");
-                CarregarOpcoes(vm);
-                return View("Form", vm);
+                return ErroGeral(vm, "Não foi possível salvar. Tente novamente.");
             }
         }
 
-        // Excluir (a confirmação é feita na tela, antes de enviar)
+        // Excluir (a confirmação é feita no modal). Sucesso = 200; erro = mensagem em texto.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult ExcluirProcessar(int id)
+        public IActionResult Excluir(int id)
         {
-            Sensor? sensor = _sensores.BuscarPorId(id);
-
-            if (sensor == null)
-            {
-                TempData["Erro"] = "Sensor não encontrado.";
-                return RedirectToAction("Index", "Frota");
-            }
-
             try
             {
-                _sensores.Excluir(id);
+                if (!_sensores.Excluir(id))
+                {
+                    return NotFound("Sensor não encontrado. Atualize a página.");
+                }
+
                 TempData["Sucesso"] = "Sensor excluído com sucesso.";
+                return Ok();
             }
             catch (SqlException ex) when (ex.Number == 547)
             {
                 // Chave estrangeira: o sensor já tem leituras registradas
-                TempData["Erro"] = "Este sensor possui leituras registradas e não pode ser excluído.";
+                return Conflict("Este sensor possui leituras registradas e não pode ser excluído.");
             }
             catch (Exception)
             {
-                TempData["Erro"] = "Não foi possível excluir. Tente novamente.";
+                return StatusCode(500, "Não foi possível excluir. Tente novamente.");
             }
-
-            return IrParaFicha(sensor);
         }
 
         // ---------- Auxiliares ----------
@@ -259,19 +226,18 @@ namespace SGIF.Controllers
                 .ToList();
         }
 
-        private IActionResult IrParaFicha(Sensor sensor)
+        // Devolve o formulário com as mensagens de erro (o JavaScript o coloca de volta no modal)
+        private IActionResult FormComErros(SensorFormViewModel vm)
         {
-            if (sensor.IdLocomotiva.HasValue)
-            {
-                return RedirectToAction("Index", "Ficha", new { tipo = "Locomotiva", id = sensor.IdLocomotiva.Value });
-            }
+            CarregarOpcoes(vm);
+            Response.StatusCode = 422;
+            return PartialView("_FormSensor", vm);
+        }
 
-            if (sensor.IdVagao.HasValue)
-            {
-                return RedirectToAction("Index", "Ficha", new { tipo = "Vagao", id = sensor.IdVagao.Value });
-            }
-
-            return RedirectToAction("Index", "Frota");
+        private IActionResult ErroGeral(SensorFormViewModel vm, string mensagem)
+        {
+            ModelState.AddModelError(string.Empty, mensagem);
+            return FormComErros(vm);
         }
     }
 }

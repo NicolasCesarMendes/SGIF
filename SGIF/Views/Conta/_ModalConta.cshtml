@@ -1,0 +1,35 @@
+@model ContaViewModel
+@{
+    // Mensagens que não pertencem a nenhum campo (ex.: falha ao salvar)
+    var errosGerais = ViewData.ModelState[string.Empty]?.Errors;
+}
+
+<div class="modal-header">
+    <h5 class="modal-title">Minha conta</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+</div>
+
+<div class="modal-body">
+    <p class="text-muted">Perfil de acesso: <strong>@Model.NomePerfil</strong></p>
+
+    @if (errosGerais != null && errosGerais.Count > 0)
+    {
+        <div class="alert alert-danger">@errosGerais[0].ErrorMessage</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <h6 class="mb-3">Meus dados</h6>
+            <partial name="_FormPerfil" model="Model.Perfil" />
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <h6 class="mb-3">Alterar senha</h6>
+            <partial name="_FormSenha" model="Model.Senha" />
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+</div>

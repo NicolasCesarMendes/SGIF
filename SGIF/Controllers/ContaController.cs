@@ -8,6 +8,7 @@ namespace SGIF.Controllers
 {
     // Minha conta (RF14): qualquer usuário logado altera os próprios dados e a própria senha.
     // O nível de acesso e o "ativo" NÃO podem ser alterados aqui.
+    // Abre em modal (pelo nome do usuário no menu): sucesso = 200; erro de validação = 422 com o modal.
     public class ContaController : Controller
     {
         private readonly Usuarios _usuarios;
@@ -17,7 +18,8 @@ namespace SGIF.Controllers
             _usuarios = usuarios;
         }
 
-        public IActionResult Index()
+        // Conteúdo do modal (dois formulários: dados e senha)
+        public IActionResult Modal()
         {
             Usuario? usuario = BuscarLogado();
 
@@ -26,7 +28,7 @@ namespace SGIF.Controllers
                 return RedirectToAction("LoginExibir", "Login");
             }
 
-            return View(MontarViewModel(usuario));
+            return PartialView("_ModalConta", MontarViewModel(usuario));
         }
 
         [HttpPost]
@@ -42,7 +44,7 @@ namespace SGIF.Controllers
 
             if (!ModelState.IsValid)
             {
-                return MostrarComPerfil(usuario, vm);
+                return ModalComErros(usuario, vm);
             }
 
             try
@@ -53,19 +55,19 @@ namespace SGIF.Controllers
                 HttpContext.Session.SetString("nome", nome);
 
                 TempData["Sucesso"] = "Dados atualizados com sucesso.";
+                return Ok();
             }
             catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
                 // UNIQUE do banco: e-mail já usado por outra conta
                 ModelState.AddModelError(nameof(vm.Email), "Já existe uma conta com este e-mail.");
-                return MostrarComPerfil(usuario, vm);
+                return ModalComErros(usuario, vm);
             }
             catch (Exception)
             {
-                TempData["Erro"] = "Não foi possível salvar. Tente novamente.";
+                ModelState.AddModelError(string.Empty, "Não foi possível salvar. Tente novamente.");
+                return ModalComErros(usuario, vm);
             }
-
-            return RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -94,7 +96,7 @@ namespace SGIF.Controllers
             if (!ModelState.IsValid)
             {
                 // Os campos de senha nunca voltam preenchidos
-                return View("Index", MontarViewModel(usuario));
+                return ModalComErros(usuario, null);
             }
 
             try
@@ -102,13 +104,13 @@ namespace SGIF.Controllers
                 _usuarios.AtualizarSenha(usuario.IdUsuario, hasher.HashPassword(usuario, vm.NovaSenha));
 
                 TempData["Sucesso"] = "Senha alterada com sucesso.";
+                return Ok();
             }
             catch (Exception)
             {
-                TempData["Erro"] = "Não foi possível alterar a senha. Tente novamente.";
+                ModelState.AddModelError(string.Empty, "Não foi possível alterar a senha. Tente novamente.");
+                return ModalComErros(usuario, null);
             }
-
-            return RedirectToAction("Index");
         }
 
         // ---------- Auxiliares ----------
@@ -132,13 +134,18 @@ namespace SGIF.Controllers
             };
         }
 
-        // Volta para a página mantendo o que o usuário digitou no formulário de dados
-        private IActionResult MostrarComPerfil(Usuario usuario, PerfilViewModel digitado)
+        // Devolve o modal com as mensagens de erro, mantendo o que o usuário digitou nos dados
+        private IActionResult ModalComErros(Usuario usuario, PerfilViewModel? digitado)
         {
             ContaViewModel vm = MontarViewModel(usuario);
-            vm.Perfil = digitado;
 
-            return View("Index", vm);
+            if (digitado != null)
+            {
+                vm.Perfil = digitado;
+            }
+
+            Response.StatusCode = 422;
+            return PartialView("_ModalConta", vm);
         }
     }
 }

@@ -73,7 +73,8 @@
                         <!-- Área do usuário -->
                         <div class="d-flex align-items-center gap-3">
                             <!-- O nome leva para "Minha conta" (RF14) -->
-                            <a class="text-lg-end lh-sm text-decoration-none text-body" asp-controller="Conta" asp-action="Index" title="Minha conta">
+                            <a href="#" class="text-lg-end lh-sm text-decoration-none text-body" title="Minha conta"
+                               data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande>
                                 <div class="fw-semibold">@nome</div>
                                 <small class="text-muted">@Usuario.NomePerfil(nivel)</small>
                             </a>
@@ -115,8 +116,45 @@
             &copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário
         </div>
     </footer>
+
+    @if (logado)
+    {
+        <!-- Modais do sistema: o conteúdo dos formulários é carregado por fetch (wwwroot/js/modais.js) -->
+        <div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" id="modalFormDialog">
+                <div class="modal-content" id="modalFormCorpo"></div>
+            </div>
+        </div>
+
+        <!-- Confirmação de exclusão (usada por Usuários e Sensores) -->
+        <div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form id="formConfirmar" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" id="confirmarId" />
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Confirmar exclusão</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-0" id="confirmarTexto"></p>
+                            <div class="alert alert-danger mt-3 mb-0 d-none" id="confirmarErro"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/modais.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
