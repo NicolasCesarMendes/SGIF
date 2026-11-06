@@ -1,0 +1,72 @@
+@model AlertaFormViewModel
+@{
+    AlertaItemViewModel a = Model.Alerta;
+
+    string classeNivel = a.Nivel == "Critico" ? "bg-danger" : "bg-warning text-dark";
+}
+
+<form asp-controller="Alertas" asp-action="Salvar" method="post">
+    <div class="modal-header">
+        <h5 class="modal-title">Alerta #@a.IdAlerta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    </div>
+
+    <div class="modal-body">
+        <input type="hidden" name="id" value="@a.IdAlerta" />
+
+        <dl class="row mb-3">
+            <dt class="col-sm-4">Nível</dt>
+            <dd class="col-sm-8"><span class="badge @classeNivel">@AlertasViewModel.NomeNivel(a.Nivel)</span></dd>
+
+            <dt class="col-sm-4">Ativo</dt>
+            <dd class="col-sm-8">
+                <a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo">@a.Ativo</a>
+            </dd>
+
+            <dt class="col-sm-4">Sensor</dt>
+            <dd class="col-sm-8">@a.Sensor</dd>
+
+            <dt class="col-sm-4">Valor lido</dt>
+            <dd class="col-sm-8 fw-semibold">@a.ValorLido</dd>
+
+            <dt class="col-sm-4">Data e hora</dt>
+            <dd class="col-sm-8">@a.DataHora</dd>
+
+            <dt class="col-sm-4">Descrição</dt>
+            <dd class="col-sm-8">@a.Descricao</dd>
+
+            <dt class="col-sm-4">Responsável</dt>
+            <dd class="col-sm-8">@a.Responsavel</dd>
+
+            @if (a.DataResolucao != null)
+            {
+                <dt class="col-sm-4">Resolvido em</dt>
+                <dd class="col-sm-8">@a.DataResolucao</dd>
+            }
+        </dl>
+
+        @if (Model.PodeAtualizar)
+        {
+            <label for="alertaStatus" class="form-label">Situação</label>
+            <select name="status" id="alertaStatus" class="form-select">
+                @foreach (string situacao in AlertasViewModel.Situacoes)
+                {
+                    <option value="@situacao" selected="@(situacao == a.Status)">@AlertasViewModel.NomeSituacao(situacao)</option>
+                }
+            </select>
+            <div class="form-text">Ao assumir ou resolver, você passa a ser o responsável pelo alerta.</div>
+        }
+        else
+        {
+            <p class="mb-0"><span class="text-muted">Situação:</span> <strong>@AlertasViewModel.NomeSituacao(a.Status)</strong></p>
+        }
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+        @if (Model.PodeAtualizar)
+        {
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        }
+    </div>
+</form>

@@ -109,13 +109,9 @@ namespace SGIF.Controllers
                 TempData["Sucesso"] = "Sensor excluído com sucesso.";
                 return Ok();
             }
-            catch (SqlException ex) when (ex.Number == 547)
-            {
-                // Chave estrangeira: o sensor já tem leituras registradas
-                return Conflict("Este sensor possui leituras registradas e não pode ser excluído.");
-            }
             catch (Exception)
             {
+                // (as leituras e os alertas do sensor são apagados junto, dentro de uma transação)
                 return StatusCode(500, "Não foi possível excluir. Tente novamente.");
             }
         }

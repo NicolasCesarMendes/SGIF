@@ -1,9 +1,116 @@
+@model HomeViewModel
 @{
     ViewData["Title"] = "Tela Inicial";
-    string nome = Context.Session.GetString("nome") ?? "";
 }
 
-<h1 class="h3 mb-3">Tela Inicial</h1>
+<h1 class="h3 mb-1">Tela Inicial</h1>
+<p class="text-muted">Olá, <strong>@Model.Nome</strong>. Resumo da operação neste momento.</p>
 
-<p>Olá, <strong>@nome</strong>. O painel operacional (indicadores, gráficos de temperatura e vibração,
-   ativos que exigem atenção e últimos alertas) será construído nos próximos passos.</p>
+<!-- Indicadores -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Ativos na frota</div>
+                <div class="fs-2 fw-semibold">@Model.TotalAtivos</div>
+                <div class="small text-muted">@Model.TotalLocomotivas locomotivas · @Model.TotalVagoes vagões</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Em manutenção</div>
+                <div class="fs-2 fw-semibold">@Model.EmManutencao</div>
+                <div class="small text-muted">ativos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100 @(Model.AlertasCriticos > 0 ? "border-danger" : "")">
+            <div class="card-body">
+                <div class="text-muted small">Alertas críticos abertos</div>
+                <div class="fs-2 fw-semibold @(Model.AlertasCriticos > 0 ? "text-danger" : "")">@Model.AlertasCriticos</div>
+                <a class="small" asp-controller="Alertas" asp-action="Index">Ver fila de alertas</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Alertas de atenção abertos</div>
+                <div class="fs-2 fw-semibold">@Model.AlertasAtencao</div>
+                <a class="small" asp-controller="Alertas" asp-action="Index">Ver fila de alertas</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Ativos que exigem atenção -->
+    <div class="col-12 col-lg-5">
+        <h2 class="h5 mb-2">Ativos que exigem atenção</h2>
+
+        @if (Model.AtivosEmAtencao.Count == 0)
+        {
+            <div class="alert alert-light border">Nenhum ativo com alertas em aberto.</div>
+        }
+        else
+        {
+            <ul class="list-group">
+                @foreach (AtivoAtencaoItemViewModel a in Model.AtivosEmAtencao)
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo">@a.Ativo</a>
+                        <span class="text-nowrap">
+                            @if (a.Criticos > 0)
+                            {
+                                <span class="badge bg-danger">@a.Criticos crítico(s)</span>
+                            }
+                            <span class="badge bg-secondary">@a.AlertasAbertos em aberto</span>
+                        </span>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+
+    <!-- Últimos alertas -->
+    <div class="col-12 col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 m-0">Últimos alertas</h2>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Alertas" asp-action="Index">Ver todos</a>
+        </div>
+
+        @if (Model.UltimosAlertas.Count == 0)
+        {
+            <div class="alert alert-light border">Nenhum alerta registrado ainda.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr><th>Nível</th><th>Ativo</th><th>Valor lido</th><th>Data e hora</th><th>Situação</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (AlertaItemViewModel a in Model.UltimosAlertas)
+                        {
+                            string classeNivel = a.Nivel == "Critico" ? "bg-danger" : "bg-warning text-dark";
+
+                            <tr>
+                                <td><span class="badge @classeNivel">@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
+                                <td><a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo">@a.Ativo</a></td>
+                                <td class="fw-semibold">@a.ValorLido</td>
+                                <td class="text-nowrap">@a.DataHora</td>
+                                <td>@AlertasViewModel.NomeSituacao(a.Status)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<p class="text-muted small mt-4">Os gráficos de temperatura e vibração do painel entram junto com a parte visual.</p>

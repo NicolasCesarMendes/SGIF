@@ -45,11 +45,43 @@ namespace SGIF.Classes
             });
         }
 
+        // Exclui o sensor junto com o histórico dele (alertas e leituras).
+        // Tudo numa transação: se algum passo falhar, nada é apagado.
         public bool Excluir(int idSensor)
         {
-            const string sql = "DELETE FROM Sensores WHERE id_sensor = @id_sensor";
+            using var conn = CriarConexao();
+            conn.Open();
 
-            return Executar(sql, p => p.AddWithValue("@id_sensor", idSensor));
+            using var transacao = conn.BeginTransaction();
+
+            try
+            {
+                // 1) alertas gerados pelas leituras do sensor (os alertas apontam para as leituras)
+                ExecutarNaTransacao(conn, transacao, @"
+                    DELETE FROM Alertas
+                    WHERE id_leitura IN (SELECT id_leitura FROM Leituras WHERE id_sensor = @id_sensor)", idSensor);
+
+                // 2) leituras do sensor
+                ExecutarNaTransacao(conn, transacao, "DELETE FROM Leituras WHERE id_sensor = @id_sensor", idSensor);
+
+                // 3) o próprio sensor
+                int excluidos = ExecutarNaTransacao(conn, transacao, "DELETE FROM Sensores WHERE id_sensor = @id_sensor", idSensor);
+
+                transacao.Commit();
+                return excluidos > 0;
+            }
+            catch
+            {
+                transacao.Rollback();
+                throw;
+            }
+        }
+
+        private static int ExecutarNaTransacao(SqlConnection conn, SqlTransaction transacao, string sql, int idSensor)
+        {
+            using var cmd = new SqlCommand(sql, conn, transacao);
+            cmd.Parameters.AddWithValue("@id_sensor", idSensor);
+            return cmd.ExecuteNonQuery();
         }
 
         public Sensor? BuscarPorId(int idSensor)

@@ -92,7 +92,7 @@ else
 
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         data-excluir-url="@Url.Action("Excluir", "Sensores")" data-excluir-id="@s.Id"
-                                        data-excluir-texto="Deseja realmente excluir este sensor? Esta ação não pode ser desfeita.">Excluir</button>
+                                        data-excluir-texto="Deseja realmente excluir este sensor? Todas as leituras e alertas dele também serão apagados. Esta ação não pode ser desfeita.">Excluir</button>
                             </td>
                         }
                     </tr>
@@ -102,4 +102,110 @@ else
     </div>
 }
 
-<p class="text-muted small mt-4">O histórico de leituras, os gráficos e os alertas deste ativo serão exibidos aqui nos próximos passos.</p>
+@* Últimas leituras de cada sensor *@
+@if (Model.Sensores.Count > 0)
+{
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
+        <h2 class="h5 m-0">Histórico de leituras</h2>
+
+        <!-- Filtro de período (RF8, RF13) -->
+        <div class="btn-group btn-group-sm" role="group" aria-label="Período">
+            @foreach (var per in FichaViewModel.Periodos)
+            {
+                <a class="btn @(Model.Periodo == per.Codigo ? "btn-primary" : "btn-outline-primary")"
+                   asp-action="Index" asp-route-tipo="@Model.Tipo" asp-route-id="@Model.Id" asp-route-periodo="@per.Codigo">@per.Texto</a>
+            }
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (SensorItemViewModel s in Model.Sensores)
+        {
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">@s.Tipo <span class="text-muted fw-normal">- @s.Modelo</span></div>
+
+                    @if (s.Leituras.Count == 0)
+                    {
+                        <div class="card-body text-muted">Nenhuma leitura neste período.</div>
+                    }
+                    else
+                    {
+                        <div class="card-body border-bottom py-2 small">
+                            <span class="me-3"><span class="text-muted">Leituras:</span> <strong>@s.QuantidadeNoPeriodo</strong></span>
+                            <span class="me-3"><span class="text-muted">Mínimo:</span> <strong>@s.Minimo</strong></span>
+                            <span class="me-3"><span class="text-muted">Máximo:</span> <strong>@s.Maximo</strong></span>
+                            <span><span class="text-muted">Média:</span> <strong>@s.Media</strong></span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr><th>Data e hora</th><th class="text-end">Valor</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (LeituraItemViewModel l in s.Leituras)
+                                    {
+                                        string cor = l.Nivel == "Critico" ? "text-danger fw-semibold"
+                                                   : l.Nivel == "Atencao" ? "text-warning-emphasis fw-semibold" : "";
+
+                                        <tr>
+                                            <td>@l.DataHora</td>
+                                            <td class="text-end @cor">@l.Valor</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer small text-muted">Mostrando as @s.Leituras.Count leituras mais recentes do período.</div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@* Alertas mais recentes deste ativo *@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
+    <h2 class="h5 m-0">Alertas do ativo</h2>
+    <a class="btn btn-sm btn-outline-secondary" asp-controller="Alertas" asp-action="Index">Ver fila de alertas</a>
+</div>
+
+@if (Model.Alertas.Count == 0)
+{
+    <div class="alert alert-light border">Nenhum alerta registrado para este ativo.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Nível</th>
+                    <th>Sensor</th>
+                    <th>Valor lido</th>
+                    <th>Data e hora</th>
+                    <th>Situação</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (AlertaItemViewModel a in Model.Alertas)
+                {
+                    string classeNivel = a.Nivel == "Critico" ? "bg-danger" : "bg-warning text-dark";
+                    string classeSituacao = a.Status == "Resolvido" ? "bg-success"
+                                          : a.Status == "Em analise" ? "bg-info text-dark" : "bg-dark";
+
+                    <tr>
+                        <td><span class="badge @classeNivel">@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
+                        <td>@a.Sensor</td>
+                        <td class="fw-semibold">@a.ValorLido</td>
+                        <td class="text-nowrap">@a.DataHora</td>
+                        <td><span class="badge @classeSituacao">@AlertasViewModel.NomeSituacao(a.Status)</span></td>
+                        <td>@a.Responsavel</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
