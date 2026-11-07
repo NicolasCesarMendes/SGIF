@@ -11,5 +11,6 @@ namespace SGIF.Models
         public decimal? LimiteCritico { get; set; }
         public int? IdLocomotiva { get; set; }
         public int? IdVagao { get; set; }
+        public bool Ativo { get; set; } = true;   // inativo: mantém o histórico, mas não recebe novas leituras
     }
 }

@@ -69,7 +69,7 @@ namespace SGIF.Classes
             {
                 using IServiceScope escopo = _escopos.CreateScope();
 
-                List<Sensor> sensores = escopo.ServiceProvider.GetRequiredService<Sensores>().ListarTodos();
+                List<Sensor> sensores = escopo.ServiceProvider.GetRequiredService<Sensores>().ListarAtivos();
                 ProcessadorLeituras processador = escopo.ServiceProvider.GetRequiredService<ProcessadorLeituras>();
 
                 foreach (Sensor sensor in sensores)

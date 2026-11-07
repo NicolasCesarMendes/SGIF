@@ -33,6 +33,7 @@ namespace SGIF.Models
     public class SensorItemViewModel
     {
         public int Id { get; set; }
+        public bool Ativo { get; set; } = true;   // inativo: mantém o histórico, mas não recebe leituras
         public string Tipo { get; set; } = string.Empty;
         public string Modelo { get; set; } = string.Empty;
         public string Faixa { get; set; } = string.Empty;

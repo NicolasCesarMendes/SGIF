@@ -222,6 +222,111 @@ namespace SGIF.Classes
             return ConsultarUm(sql, MapearDetalhe, p => p.AddWithValue("@id_alerta", idAlerta));
         }
 
+        // ---------- Análise (risco por ativo e relatórios) ----------
+
+        // Alertas ainda não resolvidos por ativo: (críticos, atenção) para cada (tipo de ativo, id)
+        public Dictionary<(string Tipo, int Id), (int Criticos, int Atencao)> ContarNaoResolvidosPorAtivo()
+        {
+            const string sql = @"
+                SELECT s.id_locomotiva, s.id_vagao, a.nivel, COUNT(*) AS total
+                FROM Alertas a
+                INNER JOIN Leituras l ON l.id_leitura = a.id_leitura
+                INNER JOIN Sensores s ON s.id_sensor = l.id_sensor
+                WHERE a.status <> 'Resolvido'
+                GROUP BY s.id_locomotiva, s.id_vagao, a.nivel";
+
+            var linhas = Consultar(sql, r => (
+                IdLocomotiva: r.GetIntNulo("id_locomotiva"),
+                IdVagao: r.GetIntNulo("id_vagao"),
+                Nivel: r.GetString(r.GetOrdinal("nivel")),
+                Total: r.GetInt32(r.GetOrdinal("total"))));
+
+            var resultado = new Dictionary<(string Tipo, int Id), (int Criticos, int Atencao)>();
+
+            foreach (var linha in linhas)
+            {
+                string tipo = linha.IdLocomotiva.HasValue ? "Locomotiva" : "Vagao";
+                int id = linha.IdLocomotiva ?? linha.IdVagao ?? 0;
+
+                resultado.TryGetValue((tipo, id), out var atual);
+
+                resultado[(tipo, id)] = linha.Nivel == "Critico"
+                    ? (atual.Criticos + linha.Total, atual.Atencao)
+                    : (atual.Criticos, atual.Atencao + linha.Total);
+            }
+
+            return resultado;
+        }
+
+        // Quantidade de alertas por nível e situação a partir de uma data, respeitando os filtros
+        public ResumoAlertas ResumirPeriodo(FiltroAnalise filtro, DateTime inicio)
+        {
+            const string sqlContagem = @"
+                SELECT a.nivel, a.status, COUNT(*) AS total
+                FROM Alertas a
+                INNER JOIN Leituras l ON l.id_leitura = a.id_leitura
+                INNER JOIN Sensores s ON s.id_sensor = l.id_sensor
+                WHERE a.data_hora >= @inicio" + FiltroSql.Condicao + @"
+                GROUP BY a.nivel, a.status";
+
+            const string sqlTempo = @"
+                SELECT AVG(CAST(DATEDIFF(MINUTE, a.data_hora, a.data_resolucao) AS decimal(18,2))) AS minutos
+                FROM Alertas a
+                INNER JOIN Leituras l ON l.id_leitura = a.id_leitura
+                INNER JOIN Sensores s ON s.id_sensor = l.id_sensor
+                WHERE a.data_hora >= @inicio AND a.data_resolucao IS NOT NULL" + FiltroSql.Condicao;
+
+            Action<SqlParameterCollection> parametros = p =>
+            {
+                p.Add("@inicio", SqlDbType.DateTime2).Value = inicio;
+                FiltroSql.Parametros(p, filtro);
+            };
+
+            ResumoAlertas resumo = new ResumoAlertas();
+
+            foreach (var linha in Consultar(sqlContagem, r => (
+                Nivel: r.GetString(r.GetOrdinal("nivel")),
+                Status: r.GetString(r.GetOrdinal("status")),
+                Total: r.GetInt32(r.GetOrdinal("total"))), parametros))
+            {
+                resumo.Total += linha.Total;
+
+                if (linha.Nivel == "Critico") resumo.Criticos += linha.Total; else resumo.Atencao += linha.Total;
+
+                if (linha.Status == "Aberto") resumo.Abertos += linha.Total;
+                else if (linha.Status == "Em analise") resumo.EmAnalise += linha.Total;
+                else resumo.Resolvidos += linha.Total;
+            }
+
+            decimal? minutos = Consultar(sqlTempo, r => r.GetDecimalNulo("minutos"), parametros).First();
+            resumo.HorasMediasParaResolver = minutos.HasValue ? (double)minutos.Value / 60.0 : null;
+
+            return resumo;
+        }
+
+        // Alertas por mês e nível a partir de uma data (comparativo mensal)
+        public List<(int Ano, int Mes, string Nivel, int Total)> ContarPorMes(FiltroAnalise filtro, DateTime inicio)
+        {
+            const string sql = @"
+                SELECT YEAR(a.data_hora) AS ano, MONTH(a.data_hora) AS mes, a.nivel, COUNT(*) AS total
+                FROM Alertas a
+                INNER JOIN Leituras l ON l.id_leitura = a.id_leitura
+                INNER JOIN Sensores s ON s.id_sensor = l.id_sensor
+                WHERE a.data_hora >= @inicio" + FiltroSql.Condicao + @"
+                GROUP BY YEAR(a.data_hora), MONTH(a.data_hora), a.nivel
+                ORDER BY ano, mes";
+
+            return Consultar(sql, r => (
+                Ano: r.GetInt32(r.GetOrdinal("ano")),
+                Mes: r.GetInt32(r.GetOrdinal("mes")),
+                Nivel: r.GetString(r.GetOrdinal("nivel")),
+                Total: r.GetInt32(r.GetOrdinal("total"))), p =>
+            {
+                p.Add("@inicio", SqlDbType.DateTime2).Value = inicio;
+                FiltroSql.Parametros(p, filtro);
+            });
+        }
+
         private static AlertaDetalhe MapearDetalhe(SqlDataReader r)
         {
             return new AlertaDetalhe

@@ -94,7 +94,38 @@ namespace SGIF.Controllers
             }
         }
 
-        // Excluir (a confirmação é feita no modal). Sucesso = 200; erro = mensagem em texto.
+        // Ativar / Desativar (botão simples da Ficha, sem modal). Desativar preserva todo o histórico.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AlterarAtivoProcessar(int id, bool ativo)
+        {
+            Sensor? sensor = _sensores.BuscarPorId(id);
+
+            if (sensor == null)
+            {
+                TempData["Erro"] = "Sensor não encontrado.";
+                return RedirectToAction("Index", "Frota");
+            }
+
+            try
+            {
+                _sensores.AlterarAtivo(id, ativo);
+
+                TempData["Sucesso"] = ativo ? "Sensor ativado." : "Sensor desativado. O histórico foi mantido.";
+            }
+            catch (Exception)
+            {
+                TempData["Erro"] = "Não foi possível alterar a situação do sensor. Tente novamente.";
+            }
+
+            // Volta para a Ficha do ativo ao qual o sensor pertence
+            return sensor.IdLocomotiva.HasValue
+                ? RedirectToAction("Index", "Ficha", new { tipo = "Locomotiva", id = sensor.IdLocomotiva.Value })
+                : RedirectToAction("Index", "Ficha", new { tipo = "Vagao", id = sensor.IdVagao });
+        }
+
+        // Excluir (a confirmação é feita no modal). Só vale para sensor sem leituras.
+        // Sucesso = 200; erro = mensagem em texto.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Excluir(int id)
@@ -109,9 +140,13 @@ namespace SGIF.Controllers
                 TempData["Sucesso"] = "Sensor excluído com sucesso.";
                 return Ok();
             }
+            catch (SqlException ex) when (ex.Number == 547)
+            {
+                // Chave estrangeira: o sensor já tem leituras (e talvez alertas) registradas
+                return Conflict("Este sensor já tem leituras registradas e não pode ser excluído. Desative-o para preservar o histórico.");
+            }
             catch (Exception)
             {
-                // (as leituras e os alertas do sensor são apagados junto, dentro de uma transação)
                 return StatusCode(500, "Não foi possível excluir. Tente novamente.");
             }
         }

@@ -22,6 +22,12 @@ namespace SGIF.Classes
         // Devolve o alerta criado (ou null, se não houve alerta novo)
         public Alerta? Registrar(Sensor sensor, decimal valor, DateTime dataHora)
         {
+            // Sensor desativado não recebe leituras (o histórico antigo é preservado)
+            if (!sensor.Ativo)
+            {
+                return null;
+            }
+
             Leitura leitura = new Leitura
             {
                 IdSensor = sensor.IdSensor,

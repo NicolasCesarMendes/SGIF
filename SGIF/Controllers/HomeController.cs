@@ -11,12 +11,14 @@ namespace SGIF.Controllers
         private readonly Locomotivas _locomotivas;
         private readonly Vagoes _vagoes;
         private readonly Alertas _alertas;
+        private readonly AnaliseSensores _analise;
 
-        public HomeController(Locomotivas locomotivas, Vagoes vagoes, Alertas alertas)
+        public HomeController(Locomotivas locomotivas, Vagoes vagoes, Alertas alertas, AnaliseSensores analise)
         {
             _locomotivas = locomotivas;
             _vagoes = vagoes;
             _alertas = alertas;
+            _analise = analise;
         }
 
         // Landing Page: página pública de apresentação (única aberta sem login, RNF4)
@@ -63,6 +65,35 @@ namespace SGIF.Controllers
             }
 
             return View(vm);
+        }
+
+        // Dados dos gráficos do painel (JSON): média e máximo da frota por tipo de sensor (RF9).
+        // Exemplo: /Home/Serie?periodo=24h
+        public IActionResult Serie(string? periodo)
+        {
+            var escolhido = AnaliseSensores.EscolherPeriodo(periodo);
+
+            var series = TiposSensor.Todos.Select(tipo => new
+            {
+                tipo,
+                nome = TiposSensor.Nome(tipo),
+                unidade = TiposSensor.Unidade(tipo),
+                pontos = _analise.SerieDaFrota(tipo, escolhido.Horas).Select(p => new
+                {
+                    inicio = p.Inicio,
+                    media = p.Media,
+                    minimo = p.Minimo,
+                    maximo = p.Maximo,
+                    quantidade = p.Quantidade
+                }).ToList()
+            }).ToList();
+
+            return Json(new
+            {
+                periodo = escolhido.Codigo,
+                minutosPorPonto = AnaliseSensores.MinutosPorPonto(escolhido.Horas),
+                series
+            });
         }
 
         public IActionResult Privacy()

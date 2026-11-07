@@ -36,6 +36,10 @@ builder.Services.AddScoped<Alertas>();
 
 // Regra de alertas das leituras e simulador de leituras (liga/desliga em appsettings.json)
 builder.Services.AddScoped<ProcessadorLeituras>();
+
+// Análises (gráficos, tendências, anomalias, risco) e cache curto para o plano de Manutenção
+builder.Services.AddScoped<AnaliseSensores>();
+builder.Services.AddMemoryCache();
 builder.Services.AddHostedService<SimuladorLeituras>();
 
 var app = builder.Build();

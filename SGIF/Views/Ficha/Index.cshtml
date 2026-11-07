@@ -64,9 +64,15 @@ else
             <tbody>
                 @foreach (SensorItemViewModel s in Model.Sensores)
                 {
-                    <tr>
+                    <tr class="@(s.Ativo ? "" : "text-muted")">
                         <td class="fw-semibold">@s.Tipo</td>
-                        <td>@s.Modelo</td>
+                        <td>
+                            @s.Modelo
+                            @if (!s.Ativo)
+                            {
+                                <span class="badge bg-secondary ms-1">Inativo</span>
+                            }
+                        </td>
                         <td>@s.Faixa</td>
                         <td>@s.LimiteAtencao</td>
                         <td>@s.LimiteCritico</td>
@@ -90,9 +96,16 @@ else
                                 <button type="button" class="btn btn-sm btn-outline-primary"
                                         data-modal-url="@Url.Action("FormSensor", "Sensores", new { id = s.Id })">Editar</button>
 
+                                <!-- Desativar mantém o histórico; o sensor inativo só deixa de receber leituras -->
+                                <form asp-controller="Sensores" asp-action="AlterarAtivoProcessar" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@s.Id" />
+                                    <input type="hidden" name="ativo" value="@(s.Ativo ? "false" : "true")" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@(s.Ativo ? "Desativar" : "Ativar")</button>
+                                </form>
+
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         data-excluir-url="@Url.Action("Excluir", "Sensores")" data-excluir-id="@s.Id"
-                                        data-excluir-texto="Deseja realmente excluir este sensor? Todas as leituras e alertas dele também serão apagados. Esta ação não pode ser desfeita.">Excluir</button>
+                                        data-excluir-texto="Deseja realmente excluir este sensor? Só é possível excluir sensores que nunca registraram leituras. Para preservar o histórico, use Desativar.">Excluir</button>
                             </td>
                         }
                     </tr>

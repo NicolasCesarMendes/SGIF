@@ -16,14 +16,17 @@ namespace SGIF.Controllers
         private readonly Sensores _sensores;
         private readonly Leituras _leituras;
         private readonly Alertas _alertas;
+        private readonly AnaliseSensores _analise;
 
-        public FichaController(Locomotivas locomotivas, Vagoes vagoes, Sensores sensores, Leituras leituras, Alertas alertas)
+        public FichaController(Locomotivas locomotivas, Vagoes vagoes, Sensores sensores, Leituras leituras, Alertas alertas,
+                               AnaliseSensores analise)
         {
             _locomotivas = locomotivas;
             _vagoes = vagoes;
             _sensores = sensores;
             _leituras = leituras;
             _alertas = alertas;
+            _analise = analise;
         }
 
         public IActionResult Index(string tipo, int id, string? periodo)
@@ -89,6 +92,7 @@ namespace SGIF.Controllers
                 SensorItemViewModel item = new SensorItemViewModel
                 {
                     Id = s.IdSensor,
+                    Ativo = s.Ativo,
                     Tipo = TiposSensor.Nome(s.Tipo),
                     Modelo = s.Modelo,
                     Faixa = FormatarFaixa(s.ValorMinimo, s.ValorMaximo, unidade),
@@ -126,6 +130,77 @@ namespace SGIF.Controllers
             }
 
             return View(vm);
+        }
+
+        // Dados dos gráficos da Ficha (JSON), um bloco por sensor: pontos do período, limites, tendência e
+        // anomalias (RF8, RF9, RF10, RF13). A tela só desenha o que vem daqui.
+        // Exemplo: /Ficha/Serie?tipo=Locomotiva&id=1&periodo=24h
+        public IActionResult Serie(string tipo, int id, string? periodo)
+        {
+            bool locomotiva = tipo != "Vagao";
+
+            bool existe = locomotiva ? _locomotivas.BuscarPorId(id) != null : _vagoes.BuscarPorId(id) != null;
+
+            if (!existe)
+            {
+                return NotFound("Ativo não encontrado.");
+            }
+
+            var escolhido = AnaliseSensores.EscolherPeriodo(periodo);
+            List<Sensor> sensores = locomotiva ? _sensores.ListarPorLocomotiva(id) : _sensores.ListarPorVagao(id);
+
+            var dadosDosSensores = sensores.Select(s =>
+            {
+                List<PontoSerie> pontos = _analise.Serie(s.IdSensor, escolhido.Horas);
+                TendenciaSensor tendencia = AnaliseSensores.CalcularTendencia(s, pontos);
+                AnomaliasSensor anomalias = _analise.Anomalias(s.IdSensor, escolhido.Horas);
+
+                return new
+                {
+                    id = s.IdSensor,
+                    ativo = s.Ativo,
+                    tipo = s.Tipo,
+                    nome = TiposSensor.Nome(s.Tipo),
+                    unidade = TiposSensor.Unidade(s.Tipo),
+                    modelo = s.Modelo,
+                    valorMinimo = s.ValorMinimo,
+                    valorMaximo = s.ValorMaximo,
+                    limiteAtencao = s.LimiteAtencao,
+                    limiteCritico = s.LimiteCritico,
+                    tendencia = new
+                    {
+                        direcao = tendencia.Direcao,
+                        inclinacaoPorHora = tendencia.InclinacaoPorHora,
+                        r2 = tendencia.R2,
+                        horasAteAtencao = tendencia.HorasAteAtencao,
+                        horasAteCritico = tendencia.HorasAteCritico
+                    },
+                    anomalias = new
+                    {
+                        quantidade = anomalias.Quantidade,
+                        media = anomalias.Media,
+                        desvio = anomalias.Desvio,
+                        limiteInferior = anomalias.LimiteInferior,
+                        limiteSuperior = anomalias.LimiteSuperior,
+                        ultimas = anomalias.Ultimas.Select(l => new { dataHora = l.DataHora, valor = l.Valor }).ToList()
+                    },
+                    pontos = pontos.Select(p => new
+                    {
+                        inicio = p.Inicio,
+                        media = p.Media,
+                        minimo = p.Minimo,
+                        maximo = p.Maximo,
+                        quantidade = p.Quantidade
+                    }).ToList()
+                };
+            }).ToList();
+
+            return Json(new
+            {
+                periodo = escolhido.Codigo,
+                minutosPorPonto = AnaliseSensores.MinutosPorPonto(escolhido.Horas),
+                sensores = dadosDosSensores
+            });
         }
 
         // ---------- Auxiliares ----------

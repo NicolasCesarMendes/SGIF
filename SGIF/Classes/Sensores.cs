@@ -45,43 +45,26 @@ namespace SGIF.Classes
             });
         }
 
-        // Exclui o sensor junto com o histórico dele (alertas e leituras).
-        // Tudo numa transação: se algum passo falhar, nada é apagado.
+        // Só exclui sensor que nunca registrou leituras (ex.: cadastro errado).
+        // Se já tem histórico, o banco recusa (SqlException 547): use AlterarAtivo para desativar.
         public bool Excluir(int idSensor)
         {
-            using var conn = CriarConexao();
-            conn.Open();
+            const string sql = "DELETE FROM Sensores WHERE id_sensor = @id_sensor";
 
-            using var transacao = conn.BeginTransaction();
-
-            try
-            {
-                // 1) alertas gerados pelas leituras do sensor (os alertas apontam para as leituras)
-                ExecutarNaTransacao(conn, transacao, @"
-                    DELETE FROM Alertas
-                    WHERE id_leitura IN (SELECT id_leitura FROM Leituras WHERE id_sensor = @id_sensor)", idSensor);
-
-                // 2) leituras do sensor
-                ExecutarNaTransacao(conn, transacao, "DELETE FROM Leituras WHERE id_sensor = @id_sensor", idSensor);
-
-                // 3) o próprio sensor
-                int excluidos = ExecutarNaTransacao(conn, transacao, "DELETE FROM Sensores WHERE id_sensor = @id_sensor", idSensor);
-
-                transacao.Commit();
-                return excluidos > 0;
-            }
-            catch
-            {
-                transacao.Rollback();
-                throw;
-            }
+            return Executar(sql, p => p.AddWithValue("@id_sensor", idSensor));
         }
 
-        private static int ExecutarNaTransacao(SqlConnection conn, SqlTransaction transacao, string sql, int idSensor)
+        // Ativa ou desativa o sensor. Sensor inativo mantém todo o histórico (leituras e alertas),
+        // mas não recebe novas leituras e não entra nas análises de risco.
+        public bool AlterarAtivo(int idSensor, bool ativo)
         {
-            using var cmd = new SqlCommand(sql, conn, transacao);
-            cmd.Parameters.AddWithValue("@id_sensor", idSensor);
-            return cmd.ExecuteNonQuery();
+            const string sql = "UPDATE Sensores SET ativo = @ativo WHERE id_sensor = @id_sensor";
+
+            return Executar(sql, p =>
+            {
+                p.AddWithValue("@id_sensor", idSensor);
+                p.AddWithValue("@ativo", ativo);
+            });
         }
 
         public Sensor? BuscarPorId(int idSensor)
@@ -94,6 +77,14 @@ namespace SGIF.Classes
         public List<Sensor> ListarTodos()
         {
             const string sql = "SELECT * FROM Sensores ORDER BY id_sensor";
+
+            return Consultar(sql, Mapear);
+        }
+
+        // Só os sensores ativos (usado pelo simulador)
+        public List<Sensor> ListarAtivos()
+        {
+            const string sql = "SELECT * FROM Sensores WHERE ativo = 1 ORDER BY id_sensor";
 
             return Consultar(sql, Mapear);
         }
@@ -136,7 +127,8 @@ namespace SGIF.Classes
                 LimiteAtencao = r.GetDecimalNulo("limite_atencao"),
                 LimiteCritico = r.GetDecimalNulo("limite_critico"),
                 IdLocomotiva = r.GetIntNulo("id_locomotiva"),
-                IdVagao = r.GetIntNulo("id_vagao")
+                IdVagao = r.GetIntNulo("id_vagao"),
+                Ativo = r.GetBoolean(r.GetOrdinal("ativo"))
             };
         }
     }
