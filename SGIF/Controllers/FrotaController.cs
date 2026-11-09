@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using SGIF.Classes;
@@ -8,8 +7,6 @@ namespace SGIF.Controllers
 {
     public class FrotaController : Controller
     {
-        private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
-
         private readonly Locomotivas _locomotivas;
         private readonly Vagoes _vagoes;
 
@@ -66,7 +63,7 @@ namespace SGIF.Controllers
                         Numero = v.NumeroIdentificacao,
                         Descricao = v.Tipo,
                         Detalhes = v.Capacidade.HasValue
-                            ? "Capacidade: " + v.Capacidade.Value.ToString("0.##", PtBr)
+                            ? "Capacidade: " + EntradaNumerica.Formatar(v.Capacidade)
                             : "",
                         Estado = v.Status
                     });
@@ -109,7 +106,7 @@ namespace SGIF.Controllers
                     vm.Id = v.IdVagao;
                     vm.NumeroIdentificacao = v.NumeroIdentificacao;
                     vm.TipoVagao = v.Tipo;
-                    vm.Capacidade = v.Capacidade?.ToString("0.##", PtBr);
+                    vm.Capacidade = EntradaNumerica.Formatar(v.Capacidade);
                     vm.Estado = v.Status;
                 }
             }
@@ -178,7 +175,13 @@ namespace SGIF.Controllers
                     }
                 }
 
-                return salvou ? Ok() : ErroGeral(vm, "O ativo não foi encontrado. Atualize a página.");
+                if (!salvou)
+                {
+                    return ErroGeral(vm, "O ativo não foi encontrado. Atualize a página.");
+                }
+
+                TempData["Sucesso"] = vm.Id > 0 ? "Ativo atualizado com sucesso." : "Ativo cadastrado com sucesso.";
+                return Ok();
             }
             catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
@@ -202,7 +205,13 @@ namespace SGIF.Controllers
             {
                 bool excluiu = tipo == "Vagao" ? _vagoes.Excluir(id) : _locomotivas.Excluir(id);
 
-                return excluiu ? Ok() : NotFound("O ativo não foi encontrado. Atualize a página.");
+                if (!excluiu)
+                {
+                    return NotFound("O ativo não foi encontrado. Atualize a página.");
+                }
+
+                TempData["Sucesso"] = "Ativo excluído com sucesso.";
+                return Ok();
             }
             catch (SqlException ex) when (ex.Number == 547)
             {
@@ -252,26 +261,10 @@ namespace SGIF.Controllers
             }
         }
 
-        // Aceita vírgula ou ponto. Vazio = sem capacidade (válido).
+        // Capacidade: vazio = sem capacidade (válido); aceita vírgula ou ponto (EntradaNumerica); não pode ser negativa.
         private static bool TentarLerCapacidade(string? texto, out decimal? valor)
         {
-            valor = null;
-
-            if (string.IsNullOrWhiteSpace(texto))
-            {
-                return true;
-            }
-
-            string normalizado = texto.Trim().Replace(',', '.');
-
-            if (decimal.TryParse(normalizado, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out decimal d)
-                && d >= 0 && d <= 99999999.99m)
-            {
-                valor = Math.Round(d, 2);
-                return true;
-            }
-
-            return false;
+            return EntradaNumerica.TentarLerDecimal(texto, out valor) && (valor == null || valor >= 0);
         }
 
         private IActionResult FormComErros(AtivoFormViewModel vm)

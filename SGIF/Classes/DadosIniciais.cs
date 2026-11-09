@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using SGIF.Models;
 
 namespace SGIF.Classes
@@ -7,9 +7,6 @@ namespace SGIF.Classes
     // O e-mail e a senha NÃO ficam no código: vêm da configuração (User Secrets).
     public static class DadosIniciais
     {
-        // Nível de acesso do administrador (1 = Administrador, 2 = Manutenção, 3 = Funcionário)
-        private const int NivelAdministrador = 1;
-
         public static void CriarAdministrador(IServiceProvider servicos)
         {
             using var escopo = servicos.CreateScope();
@@ -42,7 +39,7 @@ namespace SGIF.Classes
                 {
                     Nome = "Administrador",
                     Email = email.Trim(),
-                    NivelAcesso = NivelAdministrador,
+                    NivelAcesso = Usuario.Administrador,
                     Ativo = true
                 };
 

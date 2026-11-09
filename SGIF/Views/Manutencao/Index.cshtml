@@ -1,0 +1,128 @@
+@model ManutencaoViewModel
+@{
+    ViewData["Title"] = "Manutenção";
+
+    string NomeClassificacao(string c) => c switch { "Critico" => "Crítico", "Medio" => "Médio", _ => c };
+    string CorClassificacao(string c) => c switch { "Critico" => "danger", "Alto" => "warning", "Medio" => "info", _ => "success" };
+    int Contar(string c) => Model.Itens.Count(i => i.Classificacao == c);
+
+    int posicao = 0;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+    <h1 class="h3 m-0">Manutenção</h1>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="Index">Atualizar</a>
+</div>
+
+<p class="text-muted mb-3">
+    Plano de intervenções ordenado pelo risco de falha.
+    Gerado em @Model.GeradoEm.ToString("dd/MM/yyyy HH:mm:ss"), com os dados das últimas @Model.HorasDaAnalise h
+    (o cálculo é guardado por 1 minuto).
+</p>
+
+<!-- Quantidade de ativos por classificação de risco -->
+<div class="row g-2 mb-3">
+    @foreach (string c in new[] { "Critico", "Alto", "Medio", "Baixo" })
+    {
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-@CorClassificacao(c)">
+                <div class="card-body py-2">
+                    <div class="fs-4 fw-semibold">@Contar(c)</div>
+                    <div class="small text-muted">@NomeClassificacao(c)</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (Model.Itens.Count == 0)
+{
+    <div class="alert alert-light border">
+        Nenhum ativo para avaliar. Cadastre ativos e sensores na Frota para o plano aparecer aqui.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ativo</th>
+                    <th>Estado</th>
+                    <th style="min-width: 150px;">Risco</th>
+                    <th>Motivos</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (RiscoAtivo item in Model.Itens)
+                {
+                    posicao++;
+                    string cor = CorClassificacao(item.Classificacao);
+                    string nomeTipo = item.TipoAtivo == "Vagao" ? "Vagão" : "Locomotiva";
+
+                    <tr>
+                        <td>@posicao</td>
+                        <td>
+                            <a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@item.TipoAtivo" asp-route-id="@item.IdAtivo"
+                               class="fw-semibold text-decoration-none">@nomeTipo @item.Numero</a>
+                            <div class="text-muted small">@item.Descricao</div>
+                        </td>
+                        <td>
+                            @if (item.Estado == "Em manutencao")
+                            {
+                                <span class="badge bg-warning text-dark">@FrotaViewModel.NomeEstado(item.Estado)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@FrotaViewModel.NomeEstado(item.Estado)</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-semibold">@item.Pontuacao</span>
+                                <span class="badge bg-@cor @(cor == "warning" || cor == "info" ? "text-dark" : "")">@NomeClassificacao(item.Classificacao)</span>
+                            </div>
+                            <div class="progress mt-1" style="height: 6px;" role="progressbar"
+                                 aria-valuenow="@item.Pontuacao" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar bg-@cor" style="width: @(item.Pontuacao)%"></div>
+                            </div>
+                        </td>
+                        <td>
+                            @if (item.Motivos.Count == 0)
+                            {
+                                <span class="text-muted small">Nenhum ponto de atenção.</span>
+                            }
+                            else
+                            {
+                                <ul class="mb-0 ps-3 small">
+                                    @foreach (string motivo in item.Motivos)
+                                    {
+                                        <li>@motivo</li>
+                                    }
+                                </ul>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<details class="mt-3">
+    <summary class="fw-semibold">Como a pontuação é calculada</summary>
+    <div class="small text-muted mt-2">
+        <p class="mb-1">A pontuação vai de 0 a 100 e soma quatro partes:</p>
+        <ul class="mb-2">
+            <li>Alertas ainda não resolvidos do ativo (até 50 pontos).</li>
+            <li>Nível da leitura mais recente dos sensores (até 20 pontos).</li>
+            <li>Tendência de alta nas últimas @Model.HorasDaAnalise h e o tempo estimado para atingir os limites (até 20 pontos).</li>
+            <li>Leituras fora do padrão de cada sensor, além do esperado por acaso (até 10 pontos).</li>
+        </ul>
+        <p class="mb-0">
+            Classificação: Crítico a partir de 70, Alto a partir de 40, Médio a partir de 15 e Baixo abaixo disso.
+            Ativos inativos não entram. Os pesos são critérios iniciais da equipe, a serem calibrados com dados reais.
+        </p>
+    </div>
+</details>

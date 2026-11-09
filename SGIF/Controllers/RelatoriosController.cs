@@ -12,11 +12,15 @@ namespace SGIF.Controllers
     {
         private readonly Leituras _leituras;
         private readonly Alertas _alertas;
+        private readonly Locomotivas _locomotivas;
+        private readonly Vagoes _vagoes;
 
-        public RelatoriosController(Leituras leituras, Alertas alertas)
+        public RelatoriosController(Leituras leituras, Alertas alertas, Locomotivas locomotivas, Vagoes vagoes)
         {
             _leituras = leituras;
             _alertas = alertas;
+            _locomotivas = locomotivas;
+            _vagoes = vagoes;
         }
 
         // Página (a tela é feita pelo front-end a partir do RelatorioViewModel)
@@ -63,10 +67,39 @@ namespace SGIF.Controllers
                 Periodo = escolhido.Codigo,
                 Meses = meses,
                 GeradoEm = agora,
+                Ativos = ListarOpcoesDeAtivos(),
                 Estatisticas = _leituras.EstatisticasPorTipo(filtro, inicio),
                 Alertas = _alertas.ResumirPeriodo(filtro, inicio),
                 ComparativoMensal = MontarComparativo(filtro, meses, agora)
             };
+        }
+
+        // Locomotivas e vagões para o filtro "ativo específico"
+        private List<OpcaoDeAtivo> ListarOpcoesDeAtivos()
+        {
+            List<OpcaoDeAtivo> opcoes = new List<OpcaoDeAtivo>();
+
+            foreach (Locomotiva l in _locomotivas.ListarTodos())
+            {
+                opcoes.Add(new OpcaoDeAtivo
+                {
+                    TipoAtivo = "Locomotiva",
+                    IdAtivo = l.IdLocomotiva,
+                    Texto = "Locomotiva " + l.NumeroIdentificacao + " - " + l.Modelo
+                });
+            }
+
+            foreach (Vagao v in _vagoes.ListarTodos())
+            {
+                opcoes.Add(new OpcaoDeAtivo
+                {
+                    TipoAtivo = "Vagao",
+                    IdAtivo = v.IdVagao,
+                    Texto = "Vagão " + v.NumeroIdentificacao + " - " + v.Tipo
+                });
+            }
+
+            return opcoes;
         }
 
         // Um item por mês (os últimos N meses, incluindo o atual), com a variação da média em relação

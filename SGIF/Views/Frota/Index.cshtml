@@ -9,8 +9,10 @@
     @if (Model.PodeEditar)
     {
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-primary btn-sm" data-novo="Locomotiva">+ Nova locomotiva</button>
-            <button type="button" class="btn btn-primary btn-sm" data-novo="Vagao">+ Novo vagão</button>
+            <button type="button" class="btn btn-primary btn-sm"
+                    data-modal-url="@Url.Action("FormAtivo", "Frota", new { tipo = "Locomotiva" })">+ Nova locomotiva</button>
+            <button type="button" class="btn btn-primary btn-sm"
+                    data-modal-url="@Url.Action("FormAtivo", "Frota", new { tipo = "Vagao" })">+ Novo vagão</button>
         </div>
     }
 </div>
@@ -87,10 +89,11 @@ else
                             @if (Model.PodeEditar)
                             {
                                 <button type="button" class="btn btn-sm btn-outline-primary"
-                                        data-editar data-tipo="@item.Tipo" data-id="@item.Id">Editar</button>
+                                        data-modal-url="@Url.Action("FormAtivo", "Frota", new { tipo = item.Tipo, id = item.Id })">Editar</button>
                                 <button type="button" class="btn btn-sm btn-outline-danger"
-                                        data-excluir data-tipo="@item.Tipo" data-id="@item.Id"
-                                        data-nome="@nomeTipo @item.Numero">Excluir</button>
+                                        data-excluir-url="@Url.Action("Excluir", "Frota", new { tipo = item.Tipo })"
+                                        data-excluir-id="@item.Id"
+                                        data-excluir-texto="Deseja realmente excluir @nomeTipo @(item.Numero)? Esta ação não pode ser desfeita.">Excluir</button>
                             }
                         </td>
                     </tr>
@@ -98,44 +101,4 @@ else
             </tbody>
         </table>
     </div>
-}
-
-@if (Model.PodeEditar)
-{
-    <!-- Modal de cadastro/edição: o conteúdo (formulário) é carregado por fetch -->
-    <div class="modal fade" id="modalAtivo" tabindex="-1" aria-hidden="true"
-         data-url-form="@Url.Action("FormAtivo", "Frota")">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" id="modalAtivoCorpo"></div>
-        </div>
-    </div>
-
-    <!-- Modal de confirmação de exclusão -->
-    <div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <form id="formExcluir" asp-controller="Frota" asp-action="Excluir" method="post">
-                    <input type="hidden" name="tipo" id="excluirTipo" />
-                    <input type="hidden" name="id" id="excluirId" />
-
-                    <div class="modal-header">
-                        <h5 class="modal-title">Excluir ativo</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-0" id="excluirTexto"></p>
-                        <div class="alert alert-danger mt-3 mb-0 d-none" id="excluirErro"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">Excluir</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-}
-
-@section Scripts {
-    <script src="~/js/frota.js" asp-append-version="true"></script>
 }

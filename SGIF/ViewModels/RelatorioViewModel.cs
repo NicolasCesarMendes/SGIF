@@ -21,6 +21,9 @@ namespace SGIF.Models
         public int Meses { get; set; } = 6;
         public DateTime GeradoEm { get; set; }
 
+        // Opções para o filtro "ativo específico" (cada uma já traz o tipo e o id)
+        public List<OpcaoDeAtivo> Ativos { get; set; } = new();
+
         public List<EstatisticaTipo> Estatisticas { get; set; } = new();
         public ResumoAlertas Alertas { get; set; } = new();
         public List<ComparativoMes> ComparativoMensal { get; set; } = new();
@@ -44,5 +47,13 @@ namespace SGIF.Models
         public decimal Media { get; set; }
         public decimal Maximo { get; set; }
         public decimal? VariacaoMediaPercentual { get; set; }    // em relação ao último mês com dados do mesmo tipo
+    }
+
+    // Um ativo para escolher no filtro dos relatórios
+    public class OpcaoDeAtivo
+    {
+        public string TipoAtivo { get; set; } = string.Empty;    // Locomotiva ou Vagao
+        public int IdAtivo { get; set; }
+        public string Texto { get; set; } = string.Empty;        // "Locomotiva 1234 - Modelo"
     }
 }
