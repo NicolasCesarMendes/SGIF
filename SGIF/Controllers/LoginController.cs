@@ -22,7 +22,7 @@ namespace SGIF.Controllers
             // Quem já está logado vai direto para a Tela Inicial
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString("idUsuario")))
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("PainelOperacionalExibir", "Home");
             }
 
             return View("LoginExibirView");
@@ -33,7 +33,7 @@ namespace SGIF.Controllers
             // Quem já está logado não precisa de cadastro
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString("idUsuario")))
             {
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("PainelOperacionalExibir", "Home");
             }
 
             return View("CadastroExibirView");
@@ -106,7 +106,7 @@ namespace SGIF.Controllers
                         HttpContext.Session.SetString("nivelAcesso", usuario.NivelAcesso.ToString());
 
                         // Depois de entrar, vai sempre à Tela Inicial
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("PainelOperacionalExibir", "Home");
                     }
                 }
 

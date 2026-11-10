@@ -67,7 +67,7 @@ app.MapStaticAssets();
 // A página inicial do site é a Landing Page (pública)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=LandingPage}/{id?}")
+    pattern: "{controller=Home}/{action=LandingPageExibir}/{id?}")
     .WithStaticAssets();
 
 app.Run();

@@ -23,13 +23,13 @@ namespace SGIF.Controllers
 
         // Landing Page: página pública de apresentação (única aberta sem login, RNF4)
         [AllowAnonymous]
-        public IActionResult LandingPage()
+        public IActionResult LandingPageExibir()
         {
-            return View("LandingPageView");
+            return View("LandingPageExibirView");
         }
 
         // Tela Inicial (Painel operacional)
-        public IActionResult Index()
+        public IActionResult PainelOperacionalExibir()
         {
             List<Locomotiva> locomotivas = _locomotivas.Buscar(null, null);
             List<Vagao> vagoes = _vagoes.Buscar(null, null);
@@ -64,7 +64,7 @@ namespace SGIF.Controllers
                 vm.UltimosAlertas.Add(AlertaItemViewModel.De(d));
             }
 
-            return View(vm);
+            return View("PainelOperacionalExibirView", vm);
         }
 
         // Dados dos gráficos do painel (JSON): média e máximo da frota por tipo de sensor (RF9).
@@ -94,6 +94,20 @@ namespace SGIF.Controllers
                 minutosPorPonto = AnaliseSensores.MinutosPorPonto(escolhido.Horas),
                 series
             });
+        }
+
+        // Página "Sobre": informações do projeto (conteúdo a ser preenchido).
+        // Todos os perfis acessam; o filtro de autenticação já exige login.
+        public IActionResult SobreExibir()
+        {
+            return View("SobreExibirView");
+        }
+
+        // Página "Equipe": integrantes do projeto e contato (conteúdo a ser preenchido).
+        // Todos os perfis acessam; o filtro de autenticação já exige login.
+        public IActionResult EquipeExibir()
+        {
+            return View("EquipeExibirView");
         }
 
         public IActionResult Privacy()

@@ -49,7 +49,7 @@ namespace SGIF.Classes
 
             if (exigidos.Count > 0 && !exigidos.All(e => e.Perfis.Contains(usuario.NivelAcesso)))
             {
-                context.Result = new RedirectToActionResult("Index", "Home", null);
+                context.Result = new RedirectToActionResult("PainelOperacionalExibir", "Home", null);
             }
         }
 
