@@ -6,11 +6,14 @@ using SGIF.Models;
 namespace SGIF.Controllers
 {
     // Plano de intervenções ordenado pelo risco de falha (RF10, HU2, HU11). Todos os perfis consultam.
-    // O cálculo percorre todos os sensores, então o resultado fica guardado por 60 segundos (RNF3).
+    // O cálculo percorre todos os sensores, então o resultado fica guardado por poucos segundos: o bastante
+    // para vários usuários abrindo a tela ao mesmo tempo não repetirem a conta (RNF3), e curto para a tela
+    // acompanhar o simulador (uma leitura a cada 10 s) quase em tempo real.
     public class ManutencaoController : Controller
     {
         private const string ChaveDoCache = "ranking-de-risco";
-        private static readonly TimeSpan Validade = TimeSpan.FromSeconds(60);
+        private const int ValidadeDoCacheEmSegundos = 10;
+        private static readonly TimeSpan Validade = TimeSpan.FromSeconds(ValidadeDoCacheEmSegundos);
 
         private readonly AnaliseSensores _analise;
         private readonly IMemoryCache _cache;
@@ -43,7 +46,8 @@ namespace SGIF.Controllers
                 {
                     Itens = _analise.RankingDeRisco(),
                     GeradoEm = DateTime.Now,
-                    HorasDaAnalise = AnaliseSensores.HorasDaAnaliseDeRisco
+                    HorasDaAnalise = AnaliseSensores.HorasDaAnaliseDeRisco,
+                    SegundosParaAtualizar = ValidadeDoCacheEmSegundos
                 };
             })!;
         }

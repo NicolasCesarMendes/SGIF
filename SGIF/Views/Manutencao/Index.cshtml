@@ -15,9 +15,18 @@
 </div>
 
 <p class="text-muted mb-3">
-    Plano de intervenções ordenado pelo risco de falha.
-    Gerado em @Model.GeradoEm.ToString("dd/MM/yyyy HH:mm:ss"), com os dados das últimas @Model.HorasDaAnalise h
-    (o cálculo é guardado por 1 minuto).
+    Plano de intervenções ordenado pelo risco de falha. Atualiza sozinho a cada @Model.SegundosParaAtualizar segundos.
+    <span class="text-muted small">
+        <span data-atualizacao-status></span>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
+    </span>
+</p>
+
+<!-- Esta parte é recarregada automaticamente (wwwroot/js/atualizacao-automatica.js) -->
+<div id="regiao-manutencao" data-atualizar="@Model.SegundosParaAtualizar">
+
+<p class="text-muted small mb-3">
+    Gerado em @Model.GeradoEm.ToString("dd/MM/yyyy HH:mm:ss"), com os dados das últimas @Model.HorasDaAnalise h.
 </p>
 
 <!-- Quantidade de ativos por classificação de risco -->
@@ -109,6 +118,8 @@ else
         </table>
     </div>
 }
+
+</div>
 
 <details class="mt-3">
     <summary class="fw-semibold">Como a pontuação é calculada</summary>

@@ -15,6 +15,10 @@
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <h1 class="h3 m-0">@Model.NomeTipo @Model.Numero</h1>
     <span class="badge @classeEstado">@FrotaViewModel.NomeEstado(Model.Estado)</span>
+    <span class="text-muted small">
+        <span data-atualizacao-status></span>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
+    </span>
 </div>
 
 <div class="card mb-4">
@@ -28,6 +32,9 @@
         </dl>
     </div>
 </div>
+
+<!-- Sensores, leituras e alertas se atualizam sozinhos a cada 5 segundos (wwwroot/js/atualizacao-automatica.js) -->
+<div id="regiao-ficha" data-atualizar="5">
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
     <h2 class="h5 m-0">Sensores</h2>
@@ -222,3 +229,5 @@ else
         </table>
     </div>
 }
+
+</div>

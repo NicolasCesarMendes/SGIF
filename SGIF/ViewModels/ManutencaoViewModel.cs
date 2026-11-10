@@ -6,5 +6,6 @@ namespace SGIF.Models
         public List<RiscoAtivo> Itens { get; set; } = new();
         public DateTime GeradoEm { get; set; }
         public int HorasDaAnalise { get; set; }       // janela dos dados usados no cálculo
+        public int SegundosParaAtualizar { get; set; } // intervalo com que a tela se atualiza sozinha
     }
 }

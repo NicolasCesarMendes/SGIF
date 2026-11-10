@@ -4,7 +4,16 @@
 }
 
 <h1 class="h3 mb-1">Tela Inicial</h1>
-<p class="text-muted">Olá, <strong>@Model.Nome</strong>. Resumo da operação neste momento.</p>
+<p class="text-muted">
+    Olá, <strong>@Model.Nome</strong>. Resumo da operação neste momento.
+    <span class="text-muted small">
+        <span data-atualizacao-status></span>
+        <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
+    </span>
+</p>
+
+<!-- A partir daqui a tela se atualiza sozinha a cada 5 segundos (wwwroot/js/atualizacao-automatica.js) -->
+<div id="regiao-painel" data-atualizar="5">
 
 <!-- Indicadores -->
 <div class="row g-3 mb-4">
@@ -111,6 +120,8 @@
             </div>
         }
     </div>
+</div>
+
 </div>
 
 <p class="text-muted small mt-4">Os gráficos de temperatura e vibração do painel entram junto com a parte visual.</p>
