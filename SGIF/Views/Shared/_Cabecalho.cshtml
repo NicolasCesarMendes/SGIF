@@ -9,14 +9,14 @@
     var itens = new List<(string Texto, string Controller, string Action, bool Pronto)>
     {
         ("Painel Operacional", "Home", "PainelOperacionalExibir", true),
-        ("Frota", "FrotaExibir", "FrotaExibirView", true),
-        ("Alertas", "AlertasExibir", "AlertasExibirView", true),
-        ("Manutenção", "ManutencaoExibir", "ManutencaoExibirView", true),
-        ("Relatórios", "RelatoriosExibir", "RelatoriosExibirView", true),
+        ("Frota", "Frota", "FrotaExibir", true),
+        ("Alertas", "Alertas", "AlertasExibir", true),
+        ("Manutenção", "Manutencao", "ManutencaoExibir", true),
+        ("Relatórios", "Relatorios", "RelatoriosExibir", true),
         ("Sobre", "Home", "SobreExibir", true),
         ("Equipe", "Home", "EquipeExibir", true)
     };
-    if (nivel == Usuario.Administrador) { itens.Add(("Usuários", "UsuariosExibir", "UsuariosExibirView", true)); }
+    if (nivel == Usuario.Administrador) { itens.Add(("Usuários", "Usuarios", "UsuariosExibir", true)); }
 
     // Home tem três itens do menu: compara também a action. Ficha e Sensores pertencem à Frota.
     bool Ativo(string controller, string acao) =>

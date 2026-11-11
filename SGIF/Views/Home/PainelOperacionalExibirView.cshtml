@@ -33,7 +33,7 @@
                     <div class="stat-title font-mono text-[0.7rem] uppercase tracking-[0.12em]">@i.Rotulo</div>
                     <div class="stat-value font-serif text-4xl font-normal @(i.Critico ? "text-error" : "")">@i.Valor</div>
                     <div class="stat-desc whitespace-normal text-sm">
-                        @if (i.Fila) { <a asp-controller="Alertas" asp-action="Index" class="link link-primary">Ver fila de alertas</a> } else { @i.Detalhe }
+                        @if (i.Fila) { <a asp-controller="Alertas" asp-action="AlertasExibir" class="link link-primary">Ver fila de alertas</a> } else { @i.Detalhe }
                     </div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                         @foreach (AtivoAtencaoItemViewModel a in Model.AtivosEmAtencao)
                         {
                             <li class="list-row items-center">
-                                <a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="list-col-grow link link-hover font-medium">@a.Ativo</a>
+                                <a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="list-col-grow link link-hover font-medium">@a.Ativo</a>
                                 <span class="flex flex-wrap justify-end gap-1.5">
                                     @if (a.Criticos > 0) { <span class="badge badge-outline badge-error h-auto whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium">■ @a.Criticos crítico(s)</span> }
                                     <span class="badge badge-outline h-auto whitespace-nowrap rounded-full border-base-content/60 px-3 py-1.5 text-xs text-muted">@a.AlertasAbertos em aberto</span>
@@ -70,7 +70,7 @@
             <div class="card-body">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <h2 id="titulo-ultimos" class="text-2xl">Últimos alertas</h2>
-                    <a asp-controller="Alertas" asp-action="Index" class="btn btn-outline btn-sm rounded-full">Ver todos</a>
+                    <a asp-controller="Alertas" asp-action="AlertasExibir" class="btn btn-outline btn-sm rounded-full">Ver todos</a>
                 </div>
                 @if (Model.UltimosAlertas.Count == 0)
                 {
@@ -88,7 +88,7 @@
                                     bool critico = a.Nivel == "Critico";
                                     <tr>
                                         <td><span class="badge badge-outline @(critico ? "badge-error" : "badge-warning") h-auto gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-wider"><span aria-hidden="true">@(critico ? "■" : "▲")</span>@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
-                                        <td><a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="link link-primary">@a.Ativo</a></td>
+                                        <td><a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="link link-primary">@a.Ativo</a></td>
                                         <td class="font-mono text-[0.8rem] font-semibold">@a.ValorLido</td>
                                         <td class="whitespace-nowrap font-mono text-[0.8rem] text-muted">@a.DataHora</td>
                                         <td>@AlertasViewModel.NomeSituacao(a.Status)</td>
