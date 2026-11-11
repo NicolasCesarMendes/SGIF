@@ -22,7 +22,7 @@ namespace SGIF.Controllers
         }
 
         // Lista
-        public IActionResult Index()
+        public IActionResult UsuariosExibir()
         {
             UsuariosViewModel vm = new UsuariosViewModel
             {
@@ -30,7 +30,7 @@ namespace SGIF.Controllers
                 IdLogado = IdLogado()
             };
 
-            return View(vm);
+            return View("UsuariosExibirView", vm);
         }
 
         // Formulário do modal (novo, ou edição se vier o id)
@@ -150,7 +150,7 @@ namespace SGIF.Controllers
             if (id == IdLogado())
             {
                 TempData["Erro"] = MensagemPropriaConta;
-                return RedirectToAction("Index");
+                return RedirectToAction("UsuariosExibir");
             }
 
             try
@@ -169,7 +169,7 @@ namespace SGIF.Controllers
                 TempData["Erro"] = "Não foi possível alterar a situação. Tente novamente.";
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction("UsuariosExibir");
         }
 
         // Excluir (a confirmação é feita no modal). Sucesso = 200; erro = mensagem em texto.

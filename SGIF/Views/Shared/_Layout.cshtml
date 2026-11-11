@@ -3,24 +3,25 @@
     int.TryParse(Context.Session.GetString("nivelAcesso"), out int nivel);
     bool logado = !string.IsNullOrEmpty(nome);
     string controllerAtual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string actionAtual = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
 
     // Menu principal. Pronto = false deixa o item desativado até a tela existir
     // (quando a tela ficar pronta, é só trocar para true).
     var itens = new List<(string Texto, string Controller, string Action, bool Pronto)>
     {
-        ("Painel Operacional", "Home", "PainelOperacionalView", true),
-        ("Frota", "Frota", "Index", true),
-        ("Alertas", "Alertas", "Index", true),
-        ("Manutenção", "Manutencao", "Index", true),
-        ("Relatórios", "Relatorios", "Index", true),
-        ("Sobre", "Home", "SobreExibirView", true),
-        ("Equipe", "Home", "EquipeExibirView", true)
+        ("Painel Operacional", "Home", "PainelOperacionalExibir", true),
+        ("Frota", "Frota", "FrotaExibir", true),
+        ("Alertas", "Alertas", "AlertasExibir", true),
+        ("Manutenção", "Manutencao", "ManutencaoExibir", true),
+        ("Relatórios", "Relatorios", "RelatoriosExibir", true),
+        ("Sobre", "Home", "SobreExibir", true),
+        ("Equipe", "Home", "EquipeExibir", true)
     };
 
     // Só o Administrador vê "Usuários"
     if (nivel == Usuario.Administrador)
     {
-        itens.Add(("Usuários", "Usuarios", "Index", true));
+        itens.Add(("Usuários", "Usuarios", "UsuariosExibir", true));
     }
 }
 <!DOCTYPE html>
@@ -53,7 +54,9 @@
                             @foreach (var item in itens)
                             {
                                 // A Ficha do ativo e os Sensores fazem parte da Frota: mantêm "Frota" destacado
-                                bool ativo = string.Equals(controllerAtual, item.Controller, StringComparison.OrdinalIgnoreCase)
+                                // Painel, Sobre e Equipe usam o mesmo controller (Home): aí também compara a action
+                                bool ativo = (string.Equals(controllerAtual, item.Controller, StringComparison.OrdinalIgnoreCase)
+                                        && (item.Controller != "Home" || string.Equals(actionAtual, item.Action, StringComparison.OrdinalIgnoreCase)))
                                     || (item.Controller == "Frota" && (controllerAtual == "Ficha" || controllerAtual == "Sensores"));
 
                                 <li class="nav-item">

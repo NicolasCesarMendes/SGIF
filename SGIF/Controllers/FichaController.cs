@@ -29,7 +29,7 @@ namespace SGIF.Controllers
             _analise = analise;
         }
 
-        public IActionResult Index(string tipo, int id, string? periodo)
+        public IActionResult FichaExibir(string tipo, int id, string? periodo)
         {
             FichaViewModel vm = new FichaViewModel
             {
@@ -129,7 +129,7 @@ namespace SGIF.Controllers
                 vm.Alertas.Add(AlertaItemViewModel.De(d));
             }
 
-            return View(vm);
+            return View("FichaExibirView", vm);
         }
 
         // Dados dos gráficos da Ficha (JSON), um bloco por sensor: pontos do período, limites, tendência e
@@ -208,7 +208,7 @@ namespace SGIF.Controllers
         private IActionResult AtivoNaoEncontrado()
         {
             TempData["Erro"] = "Ativo não encontrado.";
-            return RedirectToAction("Index", "Frota");
+            return RedirectToAction("FrotaExibir", "Frota");
         }
 
         private bool PodeEditar()

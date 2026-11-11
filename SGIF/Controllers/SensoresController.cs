@@ -104,7 +104,7 @@ namespace SGIF.Controllers
             if (sensor == null)
             {
                 TempData["Erro"] = "Sensor não encontrado.";
-                return RedirectToAction("Index", "Frota");
+                return RedirectToAction("FrotaExibir", "Frota");
             }
 
             try
@@ -120,8 +120,8 @@ namespace SGIF.Controllers
 
             // Volta para a Ficha do ativo ao qual o sensor pertence
             return sensor.IdLocomotiva.HasValue
-                ? RedirectToAction("Index", "Ficha", new { tipo = "Locomotiva", id = sensor.IdLocomotiva.Value })
-                : RedirectToAction("Index", "Ficha", new { tipo = "Vagao", id = sensor.IdVagao });
+                ? RedirectToAction("FichaExibir", "Ficha", new { tipo = "Locomotiva", id = sensor.IdLocomotiva.Value })
+                : RedirectToAction("FichaExibir", "Ficha", new { tipo = "Vagao", id = sensor.IdVagao });
         }
 
         // Excluir (a confirmação é feita no modal). Só vale para sensor sem leituras.

@@ -17,7 +17,7 @@ namespace SGIF.Controllers
         }
 
         // Lista da Frota (todos os perfis podem consultar)
-        public IActionResult Index(string? tipo, string? busca, string? estado)
+        public IActionResult FrotaExibir(string? tipo, string? busca, string? estado)
         {
             tipo = (tipo == "Locomotiva" || tipo == "Vagao") ? tipo : "Todos";
             estado = (estado != null && FrotaViewModel.Estados.Contains(estado)) ? estado : null;
@@ -72,7 +72,7 @@ namespace SGIF.Controllers
 
             vm.Itens = vm.Itens.OrderBy(i => i.Tipo).ThenBy(i => i.Numero).ToList();
 
-            return View(vm);
+            return View("FrotaExibirView", vm);
         }
 
         // Formulário do modal (novo ou edição). Devolve só o HTML do formulário.

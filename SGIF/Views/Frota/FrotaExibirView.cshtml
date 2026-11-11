@@ -22,12 +22,12 @@
     @foreach (var (valor, texto) in new[] { ("Todos", "Todos"), ("Locomotiva", "Locomotivas"), ("Vagao", "Vagões") })
     {
         <a class="btn btn-outline-primary @(Model.Tipo == valor ? "active" : "")"
-           asp-action="Index" asp-route-tipo="@valor" asp-route-busca="@Model.Busca" asp-route-estado="@Model.Estado">@texto</a>
+           asp-action="FrotaExibir" asp-route-tipo="@valor" asp-route-busca="@Model.Busca" asp-route-estado="@Model.Estado">@texto</a>
     }
 </div>
 
 <!-- Busca e estado -->
-<form method="get" asp-action="Index" class="row g-2 mb-3">
+<form method="get" asp-action="FrotaExibir" class="row g-2 mb-3">
     <input type="hidden" name="tipo" value="@Model.Tipo" />
     <div class="col-12 col-md-6">
         <input type="text" name="busca" value="@Model.Busca" class="form-control"
@@ -83,7 +83,7 @@ else
                         <td class="text-muted">@item.Detalhes</td>
                         <td><span class="badge @classe">@FrotaViewModel.NomeEstado(item.Estado)</span></td>
                         <td class="text-end text-nowrap">
-                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Ficha" asp-action="Index"
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Ficha" asp-action="FichaExibir"
                                asp-route-tipo="@item.Tipo" asp-route-id="@item.Id">Ver ficha</a>
 
                             @if (Model.PodeEditar)

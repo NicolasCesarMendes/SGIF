@@ -15,7 +15,7 @@
 <p class="text-muted mb-3">Estatísticas das leituras e dos alertas, com comparativo mensal.</p>
 
 <!-- Filtros -->
-<form method="get" asp-action="Index" class="row g-2 align-items-end mb-4" id="formFiltros">
+<form method="get" asp-action="RelatoriosExibir" class="row g-2 align-items-end mb-4" id="formFiltros">
     <input type="hidden" name="idAtivo" id="idAtivo" value="@Model.IdAtivo" />
 
     <div class="col-12 col-sm-6 col-lg-2">
@@ -72,7 +72,7 @@
 
     <div class="col-6 col-lg-2 d-flex gap-2">
         <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
-        <a class="btn btn-outline-secondary" asp-action="Index">Limpar</a>
+        <a class="btn btn-outline-secondary" asp-action="RelatoriosExibir">Limpar</a>
     </div>
 </form>
 

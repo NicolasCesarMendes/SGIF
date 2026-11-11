@@ -11,7 +11,7 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
     <h1 class="h3 m-0">Manutenção</h1>
-    <a class="btn btn-outline-secondary btn-sm" asp-action="Index">Atualizar</a>
+    <a class="btn btn-outline-secondary btn-sm" asp-action="ManutencaoExibir">Atualizar</a>
 </div>
 
 <p class="text-muted mb-3">
@@ -73,7 +73,7 @@ else
                     <tr>
                         <td>@posicao</td>
                         <td>
-                            <a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@item.TipoAtivo" asp-route-id="@item.IdAtivo"
+                            <a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@item.TipoAtivo" asp-route-id="@item.IdAtivo"
                                class="fw-semibold text-decoration-none">@nomeTipo @item.Numero</a>
                             <div class="text-muted small">@item.Descricao</div>
                         </td>

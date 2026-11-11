@@ -24,9 +24,9 @@ namespace SGIF.Controllers
         }
 
         // Página (a tela é feita pelo front-end a partir do RelatorioViewModel)
-        public IActionResult Index(string? tipoAtivo, int? idAtivo, string? tipoSensor, string? periodo, int meses = 6)
+        public IActionResult RelatoriosExibir(string? tipoAtivo, int? idAtivo, string? tipoSensor, string? periodo, int meses = 6)
         {
-            return View(Montar(tipoAtivo, idAtivo, tipoSensor, periodo, meses));
+            return View("RelatoriosExibirView", Montar(tipoAtivo, idAtivo, tipoSensor, periodo, meses));
         }
 
         // Os mesmos dados em JSON

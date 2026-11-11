@@ -10,7 +10,7 @@
     };
 }
 
-<a class="btn btn-sm btn-outline-secondary mb-3" asp-controller="Frota" asp-action="Index">&larr; Toda a frota</a>
+<a class="btn btn-sm btn-outline-secondary mb-3" asp-controller="Frota" asp-action="FrotaExibir">&larr; Toda a frota</a>
 
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <h1 class="h3 m-0">@Model.NomeTipo @Model.Numero</h1>
@@ -133,7 +133,7 @@ else
             @foreach (var per in FichaViewModel.Periodos)
             {
                 <a class="btn @(Model.Periodo == per.Codigo ? "btn-primary" : "btn-outline-primary")"
-                   asp-action="Index" asp-route-tipo="@Model.Tipo" asp-route-id="@Model.Id" asp-route-periodo="@per.Codigo">@per.Texto</a>
+                   asp-action="FichaExibir" asp-route-tipo="@Model.Tipo" asp-route-id="@Model.Id" asp-route-periodo="@per.Codigo">@per.Texto</a>
             }
         </div>
     </div>
@@ -188,7 +188,7 @@ else
 @* Alertas mais recentes deste ativo *@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
     <h2 class="h5 m-0">Alertas do ativo</h2>
-    <a class="btn btn-sm btn-outline-secondary" asp-controller="Alertas" asp-action="Index">Ver fila de alertas</a>
+    <a class="btn btn-sm btn-outline-secondary" asp-controller="Alertas" asp-action="AlertasExibir">Ver fila de alertas</a>
 </div>
 
 @if (Model.Alertas.Count == 0)

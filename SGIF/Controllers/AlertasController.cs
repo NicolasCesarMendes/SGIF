@@ -18,7 +18,7 @@ namespace SGIF.Controllers
             _alertas = alertas;
         }
 
-        public IActionResult Index(string? status, int pagina = 1)
+        public IActionResult AlertasExibir(string? status, int pagina = 1)
         {
             // Só aceita as situações conhecidas; qualquer outro valor = todos
             string? filtro = status != null && AlertasViewModel.Situacoes.Contains(status) ? status : null;
@@ -42,7 +42,7 @@ namespace SGIF.Controllers
                 vm.Itens.Add(AlertaItemViewModel.De(d));
             }
 
-            return View(vm);
+            return View("AlertasExibirView", vm);
         }
 
         // Conteúdo do modal: detalhes do alerta (e a troca de situação, para quem pode)

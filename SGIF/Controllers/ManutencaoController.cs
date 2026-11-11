@@ -25,9 +25,9 @@ namespace SGIF.Controllers
         }
 
         // Página (a tela é feita pelo front-end a partir do ManutencaoViewModel)
-        public IActionResult Index()
+        public IActionResult ManutencaoExibir()
         {
-            return View(MontarViewModel());
+            return View("ManutencaoExibirView", MontarViewModel());
         }
 
         // Os mesmos dados em JSON (para testar e para a tela atualizar sem recarregar)
