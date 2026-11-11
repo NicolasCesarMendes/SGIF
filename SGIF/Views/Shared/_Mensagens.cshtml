@@ -1,0 +1,21 @@
+@* Mensagens enviadas pelos controllers (TempData), exibidas uma única vez.
+   O texto fica em v-pre: o Vue nunca interpreta o que vem do servidor. *@
+@{
+    var sucesso = TempData["Sucesso"] as string;
+    var erro = TempData["Erro"] as string;
+}
+@if (sucesso != null || erro != null)
+{
+    <div class="toast toast-end toast-bottom z-50">
+        @foreach (var (classe, papel, texto) in new[] { ("alert-success", "status", sucesso), ("alert-error", "alert", erro) })
+        {
+            if (string.IsNullOrEmpty(texto)) { continue; }
+            <div data-vue="fechavel">
+                <div v-if="aberto" class="alert @classe" role="@papel">
+                    <span v-pre>@texto</span>
+                    <button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button>
+                </div>
+            </div>
+        }
+    </div>
+}

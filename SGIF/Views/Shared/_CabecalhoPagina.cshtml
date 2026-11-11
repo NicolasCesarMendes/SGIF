@@ -1,0 +1,7 @@
+@* Título da página. Uso: <partial name="_CabecalhoPagina" model='("Eyebrow", "Título", "Descrição")' /> *@
+@model (string Eyebrow, string Titulo, string? Descricao)
+<div>
+    <p class="eyebrow">@Model.Eyebrow</p>
+    <h1 class="mt-2.5 text-4xl leading-[1.15] min-[860px]:text-[2.75rem]">@Model.Titulo</h1>
+    @if (!string.IsNullOrEmpty(Model.Descricao)) { <p class="mt-3.5 max-w-[640px] text-lg leading-relaxed text-muted">@Model.Descricao</p> }
+</div>

@@ -1,8 +1,30 @@
 @{
+    Layout = "_LayoutDaisy";
     ViewData["Title"] = "Equipe";
+
+    var integrantes = new[]
+    {
+        (Nome: "Enzo Tavares da Silva", Funcao: "Login e protótipos de interface", Url: "https://enzotavares-333.github.io/Portifolio_Pessoal/"),
+        (Nome: "Nícolas César Rodrigues Mendes", Funcao: "Escopo, requisitos e backlog", Url: ""),
+        (Nome: "Raquel Castilheiro Palma Gonçalves", Funcao: "Contexto, propósito e perspectiva do produto", Url: ""),
+        (Nome: "Yann Freire Soares de Araujo", Funcao: "Diagramas de casos de uso", Url: ""),
+    };
 }
 
-<h1 class="h3 mb-3">Equipe</h1>
+<div class="mb-10"><partial name="_CabecalhoPagina" model='("Equipe", "Equipe do projeto", "Integrantes do Projeto Integrador Interdisciplinar 2 — CST em Análise e Desenvolvimento de Sistemas, SENAI Ribeirão Preto.")' /></div>
 
-<!-- Conteúdo a ser preenchido: integrantes e contato -->
-<p class="text-muted">Esta página será preenchida em breve.</p>
+<ul class="grid grid-cols-1 gap-4 min-[960px]:grid-cols-2">
+    @foreach (var pessoa in integrantes)
+    {
+        <li class="card card-border bg-base-100">
+            <div class="card-body">
+                <h2 class="text-xl">@pessoa.Nome</h2>
+                <p class="text-muted">@pessoa.Funcao</p>
+                @if (!string.IsNullOrWhiteSpace(pessoa.Url))
+                {
+                    <p class="mt-2"><a href="@pessoa.Url" target="_blank" rel="noopener noreferrer" class="link link-primary font-medium">Abrir portfólio<span class="sr-only"> de @pessoa.Nome (nova aba)</span></a></p>
+                }
+            </div>
+        </li>
+    }
+</ul>

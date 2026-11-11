@@ -1,70 +1,38 @@
 @{
-    Layout = null;
+    Layout = "_LayoutDaisy";
+    ViewData["Title"] = "Sistema de Gestão Industrial Ferroviário";
+    ViewData["Publica"] = true;
+
+    var recursos = new[]
+    {
+        (Titulo: "Monitoramento", Texto: "Acompanhe a temperatura e a vibração dos principais componentes, com dados atuais e históricos."),
+        (Titulo: "Alertas", Texto: "Receba alertas por severidade quando houver condição de atenção ou criticidade nos equipamentos."),
+        (Titulo: "Manutenção preditiva", Texto: "Priorize as intervenções pelo risco de falha e evite falhas inesperadas."),
+    };
 }
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SGIF - Sistema de Gestão Industrial Ferroviário</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-</head>
-<body class="d-flex flex-column min-vh-100">
-    <header class="border-bottom bg-white">
-        <div class="container py-3 d-flex justify-content-between align-items-center">
-            <span class="fw-bold fs-5">SGIF</span>
-            <a class="btn btn-primary" asp-controller="Login" asp-action="LoginExibir">Abrir painel</a>
-        </div>
-    </header>
 
-    <main class="flex-grow-1">
-        <section class="bg-light py-5">
-            <div class="container py-4 text-center">
-                <h1 class="display-5 fw-bold">Sistema de Gestão Industrial Ferroviário</h1>
-                <p class="lead text-muted mx-auto" style="max-width: 720px;">
-                    Monitoramento contínuo de locomotivas e vagões para apoiar a manutenção preditiva,
-                    reduzindo paradas não planejadas e aumentando a confiabilidade da operação.
-                </p>
-                <a class="btn btn-primary btn-lg mt-2" asp-controller="Login" asp-action="LoginExibir">Abrir painel</a>
+<header class="border-b border-base-300 bg-base-100">
+    <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3 sm:px-8">
+        <span class="flex items-center gap-2.5 font-serif text-xl"><span class="text-primary"><partial name="_Icone" model='"train"' /></span>SGIF</span>
+        <a asp-controller="Login" asp-action="LoginExibir" class="btn btn-primary rounded-full">Abrir painel</a>
+    </div>
+</header>
+
+<section class="px-5 py-20 text-center">
+    <p class="eyebrow">Telemetria_Ferroviária</p>
+    <h1 class="mx-auto mt-3 max-w-3xl text-4xl leading-[1.15] min-[860px]:text-6xl">Sistema de Gestão Industrial Ferroviário</h1>
+    <p class="mx-auto mt-5 max-w-[720px] text-lg leading-relaxed text-muted">Monitoramento contínuo de locomotivas e vagões para apoiar a manutenção preditiva, reduzindo paradas não planejadas e aumentando a confiabilidade da operação.</p>
+    <a asp-controller="Login" asp-action="LoginExibir" class="btn btn-primary btn-lg mt-8 rounded-full">Abrir painel <partial name="_Icone" model='"arrowRight"' /></a>
+</section>
+
+<section class="mx-auto grid w-full max-w-[1440px] flex-1 content-start gap-4 px-5 pb-16 sm:px-8 min-[860px]:grid-cols-3">
+    @foreach (var r in recursos)
+    {
+        <article class="card card-border bg-base-100">
+            <div class="card-body">
+                <h2 class="text-2xl">@r.Titulo</h2>
+                <p class="text-muted">@r.Texto</p>
             </div>
-        </section>
-
-        <section class="py-5">
-            <div class="container">
-                <div class="row g-4">
-                    <div class="col-12 col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h2 class="h5">Monitoramento</h2>
-                                <p class="mb-0 text-muted">Acompanhe a temperatura e a vibração dos principais componentes, com dados atuais e históricos.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h2 class="h5">Alertas</h2>
-                                <p class="mb-0 text-muted">Receba alertas por severidade quando houver condição de atenção ou criticidade nos equipamentos.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h2 class="h5">Manutenção preditiva</h2>
-                                <p class="mb-0 text-muted">Priorize as intervenções pelo risco de falha e evite falhas inesperadas.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="border-top py-3 text-muted">
-        <div class="container">
-            &copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário
-        </div>
-    </footer>
-</body>
-</html>
+        </article>
+    }
+</section>

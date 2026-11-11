@@ -1,127 +1,153 @@
 @model HomeViewModel
 @{
+    Layout = "_LayoutDaisy";
     ViewData["Title"] = "Painel Operacional";
+
+    var indicadores = new[]
+    {
+        (Rotulo: "Ativos na frota", Valor: Model.TotalAtivos, Detalhe: $"{Model.TotalLocomotivas} locomotivas · {Model.TotalVagoes} vagões", Fila: false, Critico: false),
+        (Rotulo: "Em manutenção", Valor: Model.EmManutencao, Detalhe: "ativos", Fila: false, Critico: false),
+        (Rotulo: "Alertas críticos abertos", Valor: Model.AlertasCriticos, Detalhe: "", Fila: true, Critico: Model.AlertasCriticos > 0),
+        (Rotulo: "Alertas de atenção abertos", Valor: Model.AlertasAtencao, Detalhe: "", Fila: true, Critico: false),
+    };
 }
 
-<h1 class="h3 mb-1">Tela Inicial</h1>
-<p class="text-muted">
-    Olá, <strong>@Model.Nome</strong>. Resumo da operação neste momento.
-    <span class="text-muted small">
-        <span data-atualizacao-status></span>
-        <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
-    </span>
-</p>
-
-<!-- A partir daqui a tela se atualiza sozinha a cada 5 segundos (wwwroot/js/atualizacao-automatica.js) -->
-<div id="regiao-painel" data-atualizar="5">
-
-<!-- Indicadores -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Ativos na frota</div>
-                <div class="fs-2 fw-semibold">@Model.TotalAtivos</div>
-                <div class="small text-muted">@Model.TotalLocomotivas locomotivas · @Model.TotalVagoes vagões</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Em manutenção</div>
-                <div class="fs-2 fw-semibold">@Model.EmManutencao</div>
-                <div class="small text-muted">ativos</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card h-100 @(Model.AlertasCriticos > 0 ? "border-danger" : "")">
-            <div class="card-body">
-                <div class="text-muted small">Alertas críticos abertos</div>
-                <div class="fs-2 fw-semibold @(Model.AlertasCriticos > 0 ? "text-danger" : "")">@Model.AlertasCriticos</div>
-                <a class="small" asp-controller="Alertas" asp-action="AlertasExibir">Ver fila de alertas</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-lg-3">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="text-muted small">Alertas de atenção abertos</div>
-                <div class="fs-2 fw-semibold">@Model.AlertasAtencao</div>
-                <a class="small" asp-controller="Alertas" asp-action="AlertasExibir">Ver fila de alertas</a>
-            </div>
-        </div>
-    </div>
+<div class="mb-10">
+    <partial name="_CabecalhoPagina" model='("Centro_de_Controle", "Painel Operacional", "")' />
+    <p class="mt-3.5 text-lg text-muted">
+        Olá, <strong class="font-semibold text-base-content">@Model.Nome</strong>. Resumo da operação neste momento.
+        @* Atualização automática (app.js): troca só o conteúdo de #regiao-painel *@
+        <span class="text-sm" data-vue="atualizacao" data-regiao="regiao-painel" data-segundos="5">
+            <span>{{ status }}</span>
+            <button type="button" class="link link-primary ml-1 font-medium" v-on:click="alternar">{{ pausado ? 'Retomar' : 'Pausar' }}</button>
+        </span>
+    </p>
 </div>
 
-<div class="row g-4">
-    <!-- Ativos que exigem atenção -->
-    <div class="col-12 col-lg-5">
-        <h2 class="h5 mb-2">Ativos que exigem atenção</h2>
-
-        @if (Model.AtivosEmAtencao.Count == 0)
+<div id="regiao-painel">
+    <div class="grid grid-cols-1 gap-4 min-[640px]:grid-cols-2 min-[960px]:grid-cols-4">
+        @foreach (var i in indicadores)
         {
-            <div class="alert alert-light border">Nenhum ativo com alertas em aberto.</div>
+            <div class="stats border @(i.Critico ? "border-error" : "border-base-300") bg-base-100">
+                <div class="stat">
+                    <div class="stat-title font-mono text-[0.7rem] uppercase tracking-[0.12em]">@i.Rotulo</div>
+                    <div class="stat-value font-serif text-4xl font-normal @(i.Critico ? "text-error" : "")">@i.Valor</div>
+                    <div class="stat-desc whitespace-normal text-sm">
+                        @if (i.Fila) { <a asp-controller="Alertas" asp-action="Index" class="link link-primary">Ver fila de alertas</a> } else { @i.Detalhe }
+                    </div>
+                </div>
+            </div>
         }
-        else
-        {
-            <ul class="list-group">
-                @foreach (AtivoAtencaoItemViewModel a in Model.AtivosEmAtencao)
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4 min-[960px]:grid-cols-[5fr_7fr]">
+        <section class="card card-border bg-base-100" aria-labelledby="titulo-atencao">
+            <div class="card-body">
+                <h2 id="titulo-atencao" class="text-2xl">Ativos que exigem atenção</h2>
+                @if (Model.AtivosEmAtencao.Count == 0)
                 {
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo">@a.Ativo</a>
-                        <span class="text-nowrap">
-                            @if (a.Criticos > 0)
-                            {
-                                <span class="badge bg-danger">@a.Criticos crítico(s)</span>
-                            }
-                            <span class="badge bg-secondary">@a.AlertasAbertos em aberto</span>
-                        </span>
-                    </li>
+                    <p class="text-muted">Nenhum ativo com alertas em aberto.</p>
                 }
-            </ul>
-        }
-    </div>
+                else
+                {
+                    <ul class="list">
+                        @foreach (AtivoAtencaoItemViewModel a in Model.AtivosEmAtencao)
+                        {
+                            <li class="list-row items-center">
+                                <a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="list-col-grow link link-hover font-medium">@a.Ativo</a>
+                                <span class="flex flex-wrap justify-end gap-1.5">
+                                    @if (a.Criticos > 0) { <span class="badge badge-outline badge-error h-auto whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium">■ @a.Criticos crítico(s)</span> }
+                                    <span class="badge badge-outline h-auto whitespace-nowrap rounded-full border-base-content/60 px-3 py-1.5 text-xs text-muted">@a.AlertasAbertos em aberto</span>
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </section>
 
-    <!-- Últimos alertas -->
-    <div class="col-12 col-lg-7">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h2 class="h5 m-0">Últimos alertas</h2>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="Alertas" asp-action="AlertasExibir">Ver todos</a>
+        <section class="card card-border bg-base-100" aria-labelledby="titulo-ultimos">
+            <div class="card-body">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h2 id="titulo-ultimos" class="text-2xl">Últimos alertas</h2>
+                    <a asp-controller="Alertas" asp-action="Index" class="btn btn-outline btn-sm rounded-full">Ver todos</a>
+                </div>
+                @if (Model.UltimosAlertas.Count == 0)
+                {
+                    <p class="text-muted">Nenhum alerta registrado ainda.</p>
+                }
+                else
+                {
+                    <div class="overflow-x-auto">
+                        <table class="table min-w-[560px]">
+                            <caption class="sr-only">Últimos alertas registrados</caption>
+                            <thead><tr><th scope="col">Nível</th><th scope="col">Ativo</th><th scope="col">Valor lido</th><th scope="col">Data e hora</th><th scope="col">Situação</th></tr></thead>
+                            <tbody>
+                                @foreach (AlertaItemViewModel a in Model.UltimosAlertas)
+                                {
+                                    bool critico = a.Nivel == "Critico";
+                                    <tr>
+                                        <td><span class="badge badge-outline @(critico ? "badge-error" : "badge-warning") h-auto gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-wider"><span aria-hidden="true">@(critico ? "■" : "▲")</span>@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
+                                        <td><a asp-controller="Ficha" asp-action="Index" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="link link-primary">@a.Ativo</a></td>
+                                        <td class="font-mono text-[0.8rem] font-semibold">@a.ValorLido</td>
+                                        <td class="whitespace-nowrap font-mono text-[0.8rem] text-muted">@a.DataHora</td>
+                                        <td>@AlertasViewModel.NomeSituacao(a.Status)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+@* Gráficos (Vue): lêem /Home/Serie e se atualizam junto com o painel. Fora de #regiao-painel de propósito. *@
+<section class="card card-border mt-6 bg-base-100" aria-labelledby="titulo-graficos" data-vue="graficos" data-url="@Url.Action("Serie", "Home")">
+    <div class="card-body">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="titulo-graficos" class="text-2xl">Temperatura e vibração da frota</h2>
+            <div class="join" role="group" aria-label="Período dos gráficos">
+                <button v-for="p in periodos" v-bind:key="p[0]" type="button" class="btn btn-sm join-item"
+                        v-bind:class="periodo === p[0] ? 'btn-primary' : 'btn-outline'" v-bind:aria-pressed="periodo === p[0]"
+                        v-on:click="periodo = p[0]">{{ p[1] }}</button>
+            </div>
         </div>
 
-        @if (Model.UltimosAlertas.Count == 0)
-        {
-            <div class="alert alert-light border">Nenhum alerta registrado ainda.</div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-sm align-middle">
-                    <thead>
-                        <tr><th>Nível</th><th>Ativo</th><th>Valor lido</th><th>Data e hora</th><th>Situação</th></tr>
-                    </thead>
-                    <tbody>
-                        @foreach (AlertaItemViewModel a in Model.UltimosAlertas)
-                        {
-                            string classeNivel = a.Nivel == "Critico" ? "bg-danger" : "bg-warning text-dark";
+        <p v-if="erro" class="text-error" role="alert">{{ erro }}</p>
 
-                            <tr>
-                                <td><span class="badge @classeNivel">@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
-                                <td><a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo">@a.Ativo</a></td>
-                                <td class="fw-semibold">@a.ValorLido</td>
-                                <td class="text-nowrap">@a.DataHora</td>
-                                <td>@AlertasViewModel.NomeSituacao(a.Status)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+        <div class="mt-4 grid grid-cols-1 gap-8 min-[960px]:grid-cols-2">
+            <div v-for="g in graficos" v-bind:key="g.tipo" role="figure" v-bind:aria-label="g.nome + ' da frota em ' + g.unidade">
+                <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                    <span class="font-mono text-[0.7rem] uppercase tracking-widest text-muted">{{ g.nome }} ({{ g.unidade }})</span>
+                    <span class="flex gap-4 text-[0.78rem] text-muted">
+                        <span class="flex items-center gap-2"><svg width="18" height="8" aria-hidden="true"><line x1="0" y1="4" x2="18" y2="4" class="stroke-primary" stroke-width="2.5" /></svg>Média</span>
+                        <span class="flex items-center gap-2"><svg width="18" height="8" aria-hidden="true"><line x1="0" y1="4" x2="18" y2="4" class="stroke-warning" stroke-width="2.5" stroke-dasharray="4 3" /></svg>Máximo</span>
+                    </span>
+                </div>
+
+                <p v-if="!g.linhaMedia" class="mt-4 text-muted">{{ carregando ? 'Carregando...' : 'Ainda não há leituras neste período.' }}</p>
+                <template v-else>
+                    <p class="mt-2 text-sm text-muted">Última média: <strong class="font-semibold text-base-content">{{ g.ultima }} {{ g.unidade }}</strong> · Máximo no período: <strong class="font-semibold text-base-content">{{ g.maxima }} {{ g.unidade }}</strong></p>
+                    <svg class="mt-3 h-auto w-full" viewBox="0 0 640 240" aria-hidden="true">
+                        <g v-for="m in g.marcas" v-bind:key="m.y">
+                            <line class="stroke-base-300" stroke-width="1" x1="44" x2="624" v-bind:y1="m.y" v-bind:y2="m.y" />
+                            <text class="fill-current font-mono text-[11px] text-muted" x="34" v-bind:y="m.y + 4" text-anchor="end">{{ m.rotulo }}</text>
+                        </g>
+                        <text v-for="e in g.eixoX" v-bind:key="e.x" class="fill-current font-mono text-[11px] text-muted" v-bind:x="e.x" y="238" v-bind:text-anchor="e.ancora">{{ e.rotulo }}</text>
+                        <polyline class="stroke-warning" fill="none" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round" v-bind:points="g.linhaMax" />
+                        <polyline class="stroke-primary" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" v-bind:points="g.linhaMedia" />
+                    </svg>
+                    <div class="sr-only">
+                        <table>
+                            <caption>{{ g.nome }} da frota em {{ g.unidade }}</caption>
+                            <thead><tr><th scope="col">Horário</th><th scope="col">Média</th><th scope="col">Máximo</th></tr></thead>
+                            <tbody><tr v-for="p in g.tabela" v-bind:key="p.t"><th scope="row">{{ p.rotulo }}</th><td>{{ p.media }}</td><td>{{ p.max }}</td></tr></tbody>
+                        </table>
+                    </div>
+                </template>
             </div>
-        }
+        </div>
     </div>
-</div>
-
-</div>
-
-<p class="text-muted small mt-4">Os gráficos de temperatura e vibração do painel entram junto com a parte visual.</p>
+</section>

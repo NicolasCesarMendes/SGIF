@@ -1,0 +1,155 @@
+/* ============================================================
+   SGIF — único CSS do site (Tailwind 4 + DaisyUI 5)
+   Fonte: Styles/app.css  →  gera wwwroot/css/app.css  (npm run css:build)
+   ============================================================ */
+@import "tailwindcss" source(none);
+
+/* onde o Tailwind procura as classes usadas */
+@source "../Views";
+@source "../Helpers";
+@source "../wwwroot/js";
+
+@plugin "daisyui" {
+  themes: false;   /* só os temas do SGIF, definidos abaixo */
+  logs: false;
+}
+
+/* ---------- Tema claro (padrão) ---------- */
+@plugin "daisyui/theme" {
+  name: "sgif";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;   /* cartões, campos */
+  --color-base-200: #fafbfc;   /* fundo da página */
+  --color-base-300: #dde1e7;   /* bordas */
+  --color-base-content: #1c2230;
+
+  --color-primary: #33547f;
+  --color-primary-content: #fdfdfd;
+  --color-secondary: #5c6472;
+  --color-secondary-content: #fdfdfd;
+  --color-accent: #e9edf2;
+  --color-accent-content: #1c2230;
+  --color-neutral: #1c2230;
+  --color-neutral-content: #fdfdfd;
+
+  --color-info: #1f5f8b;
+  --color-info-content: #fdfdfd;
+  --color-success: #2f6b4f;
+  --color-success-content: #fdfdfd;
+  --color-warning: #7a5410;
+  --color-warning-content: #fdfdfd;
+  --color-error: #a3311c;
+  --color-error-content: #fdfdfd;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;     /* campos e botões com 44 px de altura (alvo de toque) */
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ---------- Tema escuro (segue o sistema operacional) ---------- */
+@plugin "daisyui/theme" {
+  name: "sgif-escuro";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: #1b1f26;
+  --color-base-200: #14171c;
+  --color-base-300: #2b3038;
+  --color-base-content: #e7e9ec;
+
+  --color-primary: #8fb2dd;
+  --color-primary-content: #101418;
+  --color-secondary: #a2a9b4;
+  --color-secondary-content: #101418;
+  --color-accent: #232830;
+  --color-accent-content: #e7e9ec;
+  --color-neutral: #232830;
+  --color-neutral-content: #e7e9ec;
+
+  --color-info: #7fb4d9;
+  --color-info-content: #101418;
+  --color-success: #7fc7a0;
+  --color-success-content: #101418;
+  --color-warning: #dcb35c;
+  --color-warning-content: #101418;
+  --color-error: #e2836d;
+  --color-error-content: #101418;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.625rem;
+  --radius-box: 0.875rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.275rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Texto secundário: base-content misturado com o fundo (≥ 4,5:1 nos dois temas) */
+@utility text-muted {
+  color: color-mix(in oklab, var(--color-base-content) 72%, var(--color-base-100));
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body { -webkit-font-smoothing: antialiased; }
+
+  h1, h2, h3 { font-family: var(--font-serif); letter-spacing: -0.01em; }
+
+  :focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* largura e respiro das páginas internas */
+  .pagina { @apply mx-auto w-full max-w-[1440px] px-5 py-12 sm:px-8; }
+
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.18em] text-primary;
+  }
+
+  /* campo de formulário: rótulo + entrada + mensagem de erro (para as próximas telas) */
+  .campo  { @apply flex flex-col gap-1.5; }
+  .rotulo { @apply text-sm font-medium text-muted; }
+  .erro   { @apply text-sm text-error; }
+
+  /* DaisyUI usa 20% de opacidade nas bordas e 50% nos placeholders: abaixo do contraste mínimo.
+     (classe repetida de propósito: aumenta a especificidade sem precisar de !important) */
+  .input.input, .select.select, .textarea.textarea {
+    --input-color: color-mix(in oklab, var(--color-base-content) 60%, var(--color-base-100));
+  }
+  .input.input::placeholder, .input.input input::placeholder, .textarea.textarea::placeholder {
+    color: color-mix(in oklab, var(--color-base-content) 72%, var(--color-base-100));
+    opacity: 1;
+  }
+  .input-validation-error { --input-color: var(--color-error); }
+  .input.input:has(.input-validation-error) { --input-color: var(--color-error); }
+  .checkbox.checkbox { border-color: color-mix(in oklab, var(--color-base-content) 60%, var(--color-base-100)); }
+
+  .stat-title, .stat-desc { @apply text-muted; opacity: 1; }
+
+  /* cabeçalho de tabela no estilo do SGIF */
+  .table thead th {
+    @apply font-mono text-[0.68rem] uppercase tracking-widest text-muted;
+  }
+  .table :where(tbody th) { @apply font-semibold; }
+}
