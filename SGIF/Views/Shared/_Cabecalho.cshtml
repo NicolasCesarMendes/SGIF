@@ -38,7 +38,7 @@
                 <ul class="menu menu-horizontal gap-1 p-0">
                     @foreach (var item in itens)
                     {
-                        <li class="@(item.Pronto ? "" : "menu-disabled")" title="@(item.Pronto ? null : "Em desenvolvimento")">
+                        <li class="@(item.Pronto ?"" : "menu-disabled")" title="@(item.Pronto ? null : "Em desenvolvimento")">
                             @if (item.Pronto)
                             {
                                 <a asp-controller="@item.Controller" asp-action="@item.Action" aria-current="@(Ativo(item.Controller, item.Action) ? "page" : null)"
@@ -64,7 +64,7 @@
                 <ul class="menu dropdown-content z-50 mt-2 w-64 rounded-box border border-base-300 bg-base-100 p-2">
                     @foreach (var item in itens)
                     {
-                        <li class="@(item.Pronto ? "" : "menu-disabled")">
+                        <li class="@(item.Pronto ?"" : "menu-disabled")">
                             @if (item.Pronto)
                             {
                                 <a asp-controller="@item.Controller" asp-action="@item.Action" aria-current="@(Ativo(item.Controller, item.Action) ? "page" : null)"

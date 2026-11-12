@@ -3,40 +3,40 @@
     ViewData["Title"] = "Alertas";
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <h1 class="h3 m-0">Alertas</h1>
-    <span class="text-muted small">
+<div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+    <h1 class="text-2xl m-0">Alertas</h1>
+    <span class="text-muted text-sm">
         Críticos primeiro; alertas resolvidos ficam no fim da fila.
-        <span class="text-muted small">
-            <span data-atualizacao-status></span>
-            <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
+        <span class="text-muted text-sm" data-vue="atualizacao" data-regiao="regiao-alertas" data-segundos="5">
+            <span v-text="status"></span>
+            <button type="button" class="btn btn-ghost btn-sm" v-on:click="alternar" v-text="pausado ? 'Retomar' : 'Pausar'">Pausar</button>
         </span>
     </span>
 </div>
 
-<!-- A fila se atualiza sozinha a cada 5 segundos (wwwroot/js/atualizacao-automatica.js) -->
-<div id="regiao-alertas" data-atualizar="5">
+<!-- A fila se atualiza sozinha a cada 5 segundos. -->
+<div id="regiao-alertas">
 
 <!-- Filtro por situação (Todos, Aberto, Em análise, Resolvido) -->
-<div class="d-flex flex-wrap gap-2 mb-3">
-    <a class="btn btn-sm @(Model.Status == null ? "btn-primary" : "btn-outline-primary")"
-       asp-action="AlertasExibir">Todos <span class="badge bg-light text-dark">@Model.ContagemTotal</span></a>
+<div class="flex flex-wrap gap-2 mb-3">
+    <a class="btn btn-sm @(Model.Status == null ?"btn-primary" : "btn-outline")"
+       asp-action="AlertasExibir">Todos <span class="badge bg-base-200 text-base-content">@Model.ContagemTotal</span></a>
 
     @foreach (string situacao in AlertasViewModel.Situacoes)
     {
-        <a class="btn btn-sm @(Model.Status == situacao ? "btn-primary" : "btn-outline-primary")"
-           asp-action="AlertasExibir" asp-route-status="@situacao">@AlertasViewModel.NomeSituacao(situacao) <span class="badge bg-light text-dark">@Model.ContagemDe(situacao)</span></a>
+        <a class="btn btn-sm @(Model.Status == situacao ?"btn-primary" : "btn-outline")"
+           asp-action="AlertasExibir" asp-route-status="@situacao">@AlertasViewModel.NomeSituacao(situacao) <span class="badge bg-base-200 text-base-content">@Model.ContagemDe(situacao)</span></a>
     }
 </div>
 
 @if (Model.Itens.Count == 0)
 {
-    <div class="alert alert-light border">Nenhum alerta encontrado para este filtro.</div>
+    <div class="alert bg-base-100 border">Nenhum alerta encontrado para este filtro.</div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
+    <div class="overflow-x-auto">
+        <table class="table table-zebra">
             <thead>
                 <tr>
                     <th>Nível</th>
@@ -46,16 +46,16 @@ else
                     <th>Data e hora</th>
                     <th>Situação</th>
                     <th>Responsável</th>
-                    <th class="text-end">Ações</th>
+                    <th class="text-right">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (AlertaItemViewModel a in Model.Itens)
                 {
-                    string classeNivel = a.Nivel == "Critico" ? "bg-danger" : "bg-warning text-dark";
-                    string classeSituacao = a.Status == "Resolvido" ? "bg-success"
-                                          : a.Status == "Em analise" ? "bg-info text-dark" : "bg-dark";
-                    string classeLinha = a.Nivel == "Critico" && a.Status != "Resolvido" ? "table-danger" : "";
+                    string classeNivel = a.Nivel == "Critico" ? "badge-error" : "badge-warning";
+                    string classeSituacao = a.Status == "Resolvido" ? "badge-success"
+                                          : a.Status == "Em analise" ? "badge-info" : "badge-neutral";
+                    string classeLinha = a.Nivel == "Critico" && a.Status != "Resolvido" ? "bg-error/10" : "";
 
                     <tr class="@classeLinha">
                         <td><span class="badge @classeNivel">@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
@@ -63,12 +63,12 @@ else
                             <a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo">@a.Ativo</a>
                         </td>
                         <td>@a.Sensor</td>
-                        <td class="fw-semibold">@a.ValorLido</td>
+                        <td class="font-semibold">@a.ValorLido</td>
                         <td class="text-nowrap">@a.DataHora</td>
                         <td><span class="badge @classeSituacao">@AlertasViewModel.NomeSituacao(a.Status)</span></td>
                         <td>@a.Responsavel</td>
-                        <td class="text-end text-nowrap">
-                            <button type="button" class="btn btn-sm @(Model.PodeAtualizar ? "btn-outline-primary" : "btn-outline-secondary")"
+                        <td class="text-right text-nowrap">
+                            <button type="button" class="btn btn-sm @(Model.PodeAtualizar ?"btn-outline" : "btn-outline")"
                                     data-modal-url="@Url.Action("FormAlerta", "Alertas", new { id = a.IdAlerta })" data-modal-grande>
                                 @(Model.PodeAtualizar ? "Atualizar" : "Detalhes")
                             </button>
@@ -80,17 +80,17 @@ else
     </div>
 
     <!-- Paginação -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span class="text-muted small">Página @Model.Pagina de @Model.TotalPaginas (@Model.TotalFiltrado alertas)</span>
+    <div class="flex flex-wrap justify-between items-center gap-2">
+        <span class="text-muted text-sm">Página @Model.Pagina de @Model.TotalPaginas (@Model.TotalFiltrado alertas)</span>
 
-        <div class="btn-group btn-group-sm">
+        <div class="join">
             @if (Model.Pagina > 1)
             {
-                <a class="btn btn-outline-secondary" asp-action="AlertasExibir" asp-route-status="@Model.Status" asp-route-pagina="@(Model.Pagina - 1)">&larr; Anterior</a>
+                <a class="btn btn-outline" asp-action="AlertasExibir" asp-route-status="@Model.Status" asp-route-pagina="@(Model.Pagina - 1)">&larr; Anterior</a>
             }
             @if (Model.Pagina < Model.TotalPaginas)
             {
-                <a class="btn btn-outline-secondary" asp-action="AlertasExibir" asp-route-status="@Model.Status" asp-route-pagina="@(Model.Pagina + 1)">Próxima &rarr;</a>
+                <a class="btn btn-outline" asp-action="AlertasExibir" asp-route-status="@Model.Status" asp-route-pagina="@(Model.Pagina + 1)">Próxima &rarr;</a>
             }
         </div>
     </div>

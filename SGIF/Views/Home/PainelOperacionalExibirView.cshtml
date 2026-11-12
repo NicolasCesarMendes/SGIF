@@ -28,10 +28,10 @@
     <div class="grid grid-cols-1 gap-4 min-[640px]:grid-cols-2 min-[960px]:grid-cols-4">
         @foreach (var i in indicadores)
         {
-            <div class="stats border @(i.Critico ? "border-error" : "border-base-300") bg-base-100">
+            <div class="stats border @(i.Critico ?"border-error" : "border-base-300") bg-base-100">
                 <div class="stat">
                     <div class="stat-title font-mono text-[0.7rem] uppercase tracking-[0.12em]">@i.Rotulo</div>
-                    <div class="stat-value font-serif text-4xl font-normal @(i.Critico ? "text-error" : "")">@i.Valor</div>
+                    <div class="stat-value font-serif text-4xl font-normal @(i.Critico ?"text-error" : "")">@i.Valor</div>
                     <div class="stat-desc whitespace-normal text-sm">
                         @if (i.Fila) { <a asp-controller="Alertas" asp-action="AlertasExibir" class="link link-primary">Ver fila de alertas</a> } else { @i.Detalhe }
                     </div>
@@ -53,7 +53,7 @@
                     <ul class="list">
                         @foreach (AtivoAtencaoItemViewModel a in Model.AtivosEmAtencao)
                         {
-                            <li class="list-row items-center">
+                            <li class="list-grid grid-cols-12 items-center">
                                 <a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="list-col-grow link link-hover font-medium">@a.Ativo</a>
                                 <span class="flex flex-wrap justify-end gap-1.5">
                                     @if (a.Criticos > 0) { <span class="badge badge-outline badge-error h-auto whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium">■ @a.Criticos crítico(s)</span> }
@@ -87,7 +87,7 @@
                                 {
                                     bool critico = a.Nivel == "Critico";
                                     <tr>
-                                        <td><span class="badge badge-outline @(critico ? "badge-error" : "badge-warning") h-auto gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-wider"><span aria-hidden="true">@(critico ? "■" : "▲")</span>@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
+                                        <td><span class="badge badge-outline @(critico ?"badge-error" : "badge-warning") h-auto gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[0.68rem] font-medium uppercase tracking-wider"><span aria-hidden="true">@(critico ? "■" : "▲")</span>@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
                                         <td><a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@a.TipoAtivo" asp-route-id="@a.IdAtivo" class="link link-primary">@a.Ativo</a></td>
                                         <td class="font-mono text-[0.8rem] font-semibold">@a.ValorLido</td>
                                         <td class="whitespace-nowrap font-mono text-[0.8rem] text-muted">@a.DataHora</td>

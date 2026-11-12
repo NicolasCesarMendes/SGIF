@@ -9,6 +9,13 @@
 import { createApp, ref, computed, watch, onMounted } from '../lib/vue/vue.esm-browser.prod.js';
 
 const componentes = {
+  landing: {
+    setup: () => ({ recursos: [
+      { titulo: 'Monitoramento', texto: 'Acompanhe a temperatura e a vibração dos principais componentes, com dados atuais e históricos.' },
+      { titulo: 'Alertas', texto: 'Receba alertas por severidade quando houver condição de atenção ou criticidade nos equipamentos.' },
+      { titulo: 'Manutenção preditiva', texto: 'Priorize as intervenções pelo risco de falha e evite falhas inesperadas.' },
+    ] }),
+  },
   // Mensagem do servidor (TempData) que o usuário pode fechar
   fechavel: { setup: () => ({ aberto: ref(true) }) },
 
@@ -138,3 +145,129 @@ document.querySelectorAll('[data-vue]').forEach((el) => {
   const { vue, ...props } = el.dataset;
   createApp(componentes[vue], props).mount(el);
 });
+function mensagemDe(resposta, padrao) {
+  return resposta.text().then((texto) => {
+    texto = texto.trim();
+    return !texto || texto.startsWith('<') ? padrao : texto;
+  });
+}
+
+function acompanharSessao(resposta) {
+  if (!resposta.redirected) return false;
+  location.href = resposta.url;
+  return true;
+}
+
+function iniciarModais() {
+  const dialogoFormulario = document.getElementById('modalForm');
+  const caixaFormulario = document.getElementById('modalFormCorpo');
+  const dialogoConfirmacao = document.getElementById('modalConfirmar');
+  if (!dialogoFormulario || !caixaFormulario || !dialogoConfirmacao) return;
+
+  const formConfirmar = document.getElementById('formConfirmar');
+  const erroConfirmar = document.getElementById('confirmarErro');
+
+  const mostrarErro = (texto) => {
+    caixaFormulario.innerHTML = `<div class="alert alert-error m-5" role="alert"></div><div class="flex justify-end p-4"><button type="button" class="btn btn-outline" data-modal-close>Fechar</button></div>`;
+    caixaFormulario.querySelector('[role="alert"]').textContent = texto;
+  };
+
+  document.addEventListener('click', async (evento) => {
+    const fechar = evento.target.closest('[data-modal-close]');
+    if (fechar) {
+      fechar.closest('dialog')?.close();
+      return;
+    }
+
+    const abrir = evento.target.closest('[data-modal-url]');
+    if (abrir) {
+      evento.preventDefault();
+      const caixa = dialogoFormulario.querySelector('.modal-box');
+      caixa.classList.toggle('max-w-2xl', !('modalGrande' in abrir.dataset));
+      caixa.classList.toggle('max-w-4xl', 'modalGrande' in abrir.dataset);
+      caixaFormulario.innerHTML = '<div class="p-8 text-center text-muted">Carregando…</div>';
+      dialogoFormulario.showModal();
+      try {
+        const resposta = await fetch(abrir.dataset.modalUrl, { credentials: 'same-origin' });
+        if (acompanharSessao(resposta)) return;
+        if (!resposta.ok) return mostrarErro(await mensagemDe(resposta, 'Não foi possível carregar o formulário.'));
+        caixaFormulario.innerHTML = await resposta.text();
+      } catch {
+        mostrarErro('Falha de conexão. Tente novamente.');
+      }
+      return;
+    }
+
+    const excluir = evento.target.closest('[data-excluir-url]');
+    if (excluir) {
+      formConfirmar.action = excluir.dataset.excluirUrl;
+      document.getElementById('confirmarId').value = excluir.dataset.excluirId;
+      document.getElementById('confirmarTexto').textContent = excluir.dataset.excluirTexto || 'Deseja realmente excluir? Esta ação não pode ser desfeita.';
+      erroConfirmar.classList.add('hidden');
+      dialogoConfirmacao.showModal();
+    }
+  });
+
+  [dialogoFormulario, dialogoConfirmacao].forEach((dialogo) => dialogo.addEventListener('click', (evento) => {
+    if (evento.target === dialogo) dialogo.close();
+  }));
+
+  dialogoFormulario.addEventListener('submit', async (evento) => {
+    const form = evento.target.closest('form');
+    if (!form || !caixaFormulario.contains(form)) return;
+    evento.preventDefault();
+    const botao = evento.submitter || form.querySelector('button[type="submit"]');
+    if (botao) botao.disabled = true;
+    try {
+      const resposta = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+      if (acompanharSessao(resposta)) return;
+      if (resposta.ok) return location.reload();
+      if (resposta.status === 422) {
+        caixaFormulario.innerHTML = await resposta.text();
+        return;
+      }
+      mostrarErro(await mensagemDe(resposta, 'Não foi possível concluir a operação.'));
+    } catch {
+      mostrarErro('Falha de conexão. Tente novamente.');
+    } finally {
+      if (botao?.isConnected) botao.disabled = false;
+    }
+  });
+
+  formConfirmar.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const botao = formConfirmar.querySelector('button[type="submit"]');
+    botao.disabled = true;
+    erroConfirmar.classList.add('hidden');
+    try {
+      const resposta = await fetch(formConfirmar.action, { method: 'POST', body: new FormData(formConfirmar), credentials: 'same-origin' });
+      if (acompanharSessao(resposta)) return;
+      if (resposta.ok) return location.reload();
+      erroConfirmar.textContent = await mensagemDe(resposta, 'Não foi possível excluir. Tente novamente.');
+      erroConfirmar.classList.remove('hidden');
+    } catch {
+      erroConfirmar.textContent = 'Falha de conexão. Tente novamente.';
+      erroConfirmar.classList.remove('hidden');
+    } finally {
+      botao.disabled = false;
+    }
+  });
+}
+
+function iniciarFiltrosRelatorio() {
+  const form = document.getElementById('formFiltros');
+  if (!form) return;
+  form.addEventListener('submit', () => {
+    const tipo = document.getElementById('tipoAtivo');
+    const id = document.getElementById('idAtivo');
+    const especifico = document.getElementById('ativoEspecifico');
+    if (especifico.value) {
+      [tipo.value, id.value] = especifico.value.split(':');
+    } else {
+      id.value = '';
+    }
+  });
+}
+
+iniciarModais();
+iniciarFiltrosRelatorio();

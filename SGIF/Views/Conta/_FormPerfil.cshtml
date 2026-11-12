@@ -2,15 +2,15 @@
 
 <form asp-controller="Conta" asp-action="SalvarPerfilProcessar" method="post">
     <div class="mb-3">
-        <label asp-for="Nome" class="form-label">Nome</label>
-        <input asp-for="Nome" class="form-control" maxlength="200" autocomplete="name" />
-        <span asp-validation-for="Nome" class="text-danger small"></span>
+        <label asp-for="Nome" class="label font-medium text-sm">Nome</label>
+        <input asp-for="Nome" class="input w-full" maxlength="200" autocomplete="name" />
+        <span asp-validation-for="Nome" class="text-error text-sm"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Email" class="form-label">E-mail</label>
-        <input asp-for="Email" type="email" class="form-control" maxlength="150" autocomplete="username" />
-        <span asp-validation-for="Email" class="text-danger small"></span>
+        <label asp-for="Email" class="label font-medium text-sm">E-mail</label>
+        <input asp-for="Email" type="email" class="input w-full" maxlength="150" autocomplete="username" />
+        <span asp-validation-for="Email" class="text-error text-sm"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Salvar dados</button>

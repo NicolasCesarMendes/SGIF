@@ -37,9 +37,9 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-3">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-b mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="@(logado ? "PainelOperacionalExibir" : "LandingPageExibir")">SGIF</a>
+                <a class="navbar-brand font-bold" asp-controller="Home" asp-action="@(logado ? "PainelOperacionalExibir" : "LandingPageExibir")">SGIF</a>
 
                 @if (logado)
                 {
@@ -62,7 +62,7 @@
                                 <li class="nav-item">
                                     @if (item.Pronto)
                                     {
-                                        <a class="nav-link @(ativo ? "active fw-semibold" : "")"
+                                        <a class="nav-link @(ativo ?"active fw-semibold" : "")"
                                            asp-controller="@item.Controller" asp-action="@item.Action">@item.Texto</a>
                                     }
                                     else
@@ -74,15 +74,15 @@
                         </ul>
 
                         <!-- Área do usuário -->
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="flex items-center gap-3">
                             <!-- O nome leva para "Minha conta" (RF14) -->
                             <a href="#" class="text-lg-end lh-sm text-decoration-none text-body" title="Minha conta"
                                data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande>
-                                <div class="fw-semibold">@nome</div>
+                                <div class="font-semibold">@nome</div>
                                 <small class="text-muted">@Usuario.NomePerfil(nivel)</small>
                             </a>
                             <form asp-controller="Login" asp-action="SairProcessar" method="post" class="m-0">
-                                <button type="submit" class="btn btn-outline-secondary btn-sm">Sair</button>
+                                <button type="submit" class="btn btn-outline btn-sm">Sair</button>
                             </form>
                         </div>
                     </div>
@@ -96,17 +96,17 @@
             @* Mensagens enviadas pelos controllers (TempData), exibidas uma única vez *@
             @if (TempData["Sucesso"] is string mensagemSucesso)
             {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="alert alert-success" role="alert">
                     @mensagemSucesso
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-square" data-bs-dismiss="alert" aria-label="Fechar"></button>
                 </div>
             }
 
             @if (TempData["Erro"] is string mensagemErro)
             {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="alert alert-error" role="alert">
                     @mensagemErro
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    <button type="button" class="btn btn-ghost btn-sm btn-square" data-bs-dismiss="alert" aria-label="Fechar"></button>
                 </div>
             }
 
@@ -114,7 +114,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-t footer text-muted">
         <div class="container">
             &copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário
         </div>
@@ -123,31 +123,31 @@
     @if (logado)
     {
         <!-- Modais do sistema: o conteúdo dos formulários é carregado por fetch (wwwroot/js/modais.js) -->
-        <div class="modal fade" id="modalForm" tabindex="-1" aria-hidden="true">
+        <div class="modal" id="modalForm" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" id="modalFormDialog">
                 <div class="modal-content" id="modalFormCorpo"></div>
             </div>
         </div>
 
         <!-- Confirmação de exclusão (usada por Usuários e Sensores) -->
-        <div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
+        <div class="modal" id="modalConfirmar" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form id="formConfirmar" method="post">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="id" id="confirmarId" />
 
-                        <div class="modal-header">
-                            <h5 class="modal-title">Confirmar exclusão</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        <div class="flex items-center justify-between border-b border-base-300 p-4">
+                            <h5 class="text-lg font-semibold">Confirmar exclusão</h5>
+                            <button type="button" class="btn btn-ghost btn-sm btn-square" data-modal-close aria-label="Fechar"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="space-y-4 p-4">
                             <p class="mb-0" id="confirmarTexto"></p>
-                            <div class="alert alert-danger mt-3 mb-0 d-none" id="confirmarErro"></div>
+                            <div class="alert alert-error mt-3 mb-0 d-none" id="confirmarErro"></div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Excluir</button>
+                        <div class="flex justify-end gap-2 border-t border-base-300 p-4">
+                            <button type="button" class="btn btn-outline" data-modal-close>Cancelar</button>
+                            <button type="submit" class="btn btn-error">Excluir</button>
                         </div>
                     </form>
                 </div>

@@ -4,40 +4,40 @@
 
     string classeEstado = Model.Estado switch
     {
-        "Ativo" => "bg-success",
-        "Em manutencao" => "bg-warning text-dark",
-        _ => "bg-secondary"
+        "Ativo" => "badge-success",
+        "Em manutencao" => "badge-warning",
+        _ => "badge-ghost"
     };
 }
 
-<a class="btn btn-sm btn-outline-secondary mb-3" asp-controller="Frota" asp-action="FrotaExibir">&larr; Toda a frota</a>
+<a class="btn btn-sm btn-outline mb-3" asp-controller="Frota" asp-action="FrotaExibir">&larr; Toda a frota</a>
 
-<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-    <h1 class="h3 m-0">@Model.NomeTipo @Model.Numero</h1>
+<div class="flex flex-wrap items-center gap-2 mb-3">
+    <h1 class="text-2xl m-0">@Model.NomeTipo @Model.Numero</h1>
     <span class="badge @classeEstado">@FrotaViewModel.NomeEstado(Model.Estado)</span>
-    <span class="text-muted small">
-        <span data-atualizacao-status></span>
-        <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
+    <span class="text-muted text-sm" data-vue="atualizacao" data-regiao="regiao-ficha" data-segundos="5">
+        <span v-text="status"></span>
+        <button type="button" class="btn btn-ghost btn-sm" v-on:click="alternar" v-text="pausado ? 'Retomar' : 'Pausar'">Pausar</button>
     </span>
 </div>
 
-<div class="card mb-4">
+<div class="card card-border bg-base-100 mb-4">
     <div class="card-body">
-        <dl class="row mb-0">
+        <dl class="grid grid-cols-12 mb-0">
             @foreach (var (rotulo, valor) in Model.Detalhes)
             {
-                <dt class="col-6 col-md-3">@rotulo</dt>
-                <dd class="col-6 col-md-3">@valor</dd>
+                <dt class="col-span-6 md:col-span-3">@rotulo</dt>
+                <dd class="col-span-6 md:col-span-3">@valor</dd>
             }
         </dl>
     </div>
 </div>
 
-<!-- Sensores, leituras e alertas se atualizam sozinhos a cada 5 segundos (wwwroot/js/atualizacao-automatica.js) -->
-<div id="regiao-ficha" data-atualizar="5">
+<!-- Sensores, leituras e alertas se atualizam sozinhos a cada 5 segundos. -->
+<div id="regiao-ficha">
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-    <h2 class="h5 m-0">Sensores</h2>
+<div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+    <h2 class="text-lg m-0">Sensores</h2>
 
     @if (Model.PodeEditar)
     {
@@ -48,12 +48,12 @@
 
 @if (Model.Sensores.Count == 0)
 {
-    <div class="alert alert-light border">Nenhum sensor associado a este ativo.</div>
+    <div class="alert bg-base-100 border">Nenhum sensor associado a este ativo.</div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
+    <div class="overflow-x-auto">
+        <table class="table table-zebra">
             <thead>
                 <tr>
                     <th>Tipo</th>
@@ -64,20 +64,20 @@ else
                     <th>Última leitura</th>
                     @if (Model.PodeEditar)
                     {
-                        <th class="text-end">Ações</th>
+                        <th class="text-right">Ações</th>
                     }
                 </tr>
             </thead>
             <tbody>
                 @foreach (SensorItemViewModel s in Model.Sensores)
                 {
-                    <tr class="@(s.Ativo ? "" : "text-muted")">
-                        <td class="fw-semibold">@s.Tipo</td>
+                    <tr class="@(s.Ativo ?"" : "text-muted")">
+                        <td class="font-semibold">@s.Tipo</td>
                         <td>
                             @s.Modelo
                             @if (!s.Ativo)
                             {
-                                <span class="badge bg-secondary ms-1">Inativo</span>
+                                <span class="badge bg-neutral ms-1">Inativo</span>
                             }
                         </td>
                         <td>@s.Faixa</td>
@@ -86,11 +86,11 @@ else
                         <td>
                             @if (s.UltimaLeituraEm != null)
                             {
-                                string corLeitura = s.NivelLeitura == "Critico" ? "text-danger"
-                                                  : s.NivelLeitura == "Atencao" ? "text-warning-emphasis" : "";
+                                string corLeitura = s.NivelLeitura == "Critico" ? "text-error"
+                                                  : s.NivelLeitura == "Atencao" ? "text-warning" : "";
 
-                                <span class="fw-semibold @corLeitura">@s.UltimaLeitura</span>
-                                <div class="text-muted small">@s.UltimaLeituraEm</div>
+                                <span class="font-semibold @corLeitura">@s.UltimaLeitura</span>
+                                <div class="text-muted text-sm">@s.UltimaLeituraEm</div>
                             }
                             else
                             {
@@ -99,18 +99,18 @@ else
                         </td>
                         @if (Model.PodeEditar)
                         {
-                            <td class="text-end text-nowrap">
-                                <button type="button" class="btn btn-sm btn-outline-primary"
+                            <td class="text-right text-nowrap">
+                                <button type="button" class="btn btn-sm btn-outline"
                                         data-modal-url="@Url.Action("FormSensor", "Sensores", new { id = s.Id })">Editar</button>
 
                                 <!-- Desativar mantém o histórico; o sensor inativo só deixa de receber leituras -->
-                                <form asp-controller="Sensores" asp-action="AlterarAtivoProcessar" method="post" class="d-inline">
+                                <form asp-controller="Sensores" asp-action="AlterarAtivoProcessar" method="post" class="inline">
                                     <input type="hidden" name="id" value="@s.Id" />
                                     <input type="hidden" name="ativo" value="@(s.Ativo ? "false" : "true")" />
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@(s.Ativo ? "Desativar" : "Ativar")</button>
+                                    <button type="submit" class="btn btn-sm btn-outline">@(s.Ativo ? "Desativar" : "Ativar")</button>
                                 </form>
 
-                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                <button type="button" class="btn btn-sm btn-outline btn-error"
                                         data-excluir-url="@Url.Action("Excluir", "Sensores")" data-excluir-id="@s.Id"
                                         data-excluir-texto="Deseja realmente excluir este sensor? Só é possível excluir sensores que nunca registraram leituras. Para preservar o histórico, use Desativar.">Excluir</button>
                             </td>
@@ -125,25 +125,25 @@ else
 @* Últimas leituras de cada sensor *@
 @if (Model.Sensores.Count > 0)
 {
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
-        <h2 class="h5 m-0">Histórico de leituras</h2>
+    <div class="flex flex-wrap justify-between items-center gap-2 mt-4 mb-2">
+        <h2 class="text-lg m-0">Histórico de leituras</h2>
 
         <!-- Filtro de período (RF8, RF13) -->
-        <div class="btn-group btn-group-sm" role="group" aria-label="Período">
+        <div class="join" role="group" aria-label="Período">
             @foreach (var per in FichaViewModel.Periodos)
             {
-                <a class="btn @(Model.Periodo == per.Codigo ? "btn-primary" : "btn-outline-primary")"
+                <a class="btn @(Model.Periodo == per.Codigo ?"btn-primary" : "btn-outline")"
                    asp-action="FichaExibir" asp-route-tipo="@Model.Tipo" asp-route-id="@Model.Id" asp-route-periodo="@per.Codigo">@per.Texto</a>
             }
         </div>
     </div>
 
-    <div class="row g-3">
+    <div class="grid grid-cols-12 gap-3">
         @foreach (SensorItemViewModel s in Model.Sensores)
         {
-            <div class="col-12 col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header fw-semibold">@s.Tipo <span class="text-muted fw-normal">- @s.Modelo</span></div>
+            <div class="col-span-12 lg:col-span-6">
+                <div class="card card-border bg-base-100 h-full">
+                    <div class="border-b border-base-300 p-4 font-semibold font-semibold">@s.Tipo <span class="text-muted font-normal">- @s.Modelo</span></div>
 
                     @if (s.Leituras.Count == 0)
                     {
@@ -151,33 +151,33 @@ else
                     }
                     else
                     {
-                        <div class="card-body border-bottom py-2 small">
+                        <div class="card-body border-b py-2 text-sm">
                             <span class="me-3"><span class="text-muted">Leituras:</span> <strong>@s.QuantidadeNoPeriodo</strong></span>
                             <span class="me-3"><span class="text-muted">Mínimo:</span> <strong>@s.Minimo</strong></span>
                             <span class="me-3"><span class="text-muted">Máximo:</span> <strong>@s.Maximo</strong></span>
                             <span><span class="text-muted">Média:</span> <strong>@s.Media</strong></span>
                         </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
+                        <div class="overflow-x-auto">
+                            <table class="table table-xs mb-0">
                                 <thead>
-                                    <tr><th>Data e hora</th><th class="text-end">Valor</th></tr>
+                                    <tr><th>Data e hora</th><th class="text-right">Valor</th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (LeituraItemViewModel l in s.Leituras)
                                     {
-                                        string cor = l.Nivel == "Critico" ? "text-danger fw-semibold"
-                                                   : l.Nivel == "Atencao" ? "text-warning-emphasis fw-semibold" : "";
+                                        string cor = l.Nivel == "Critico" ? "text-error font-semibold"
+                                                   : l.Nivel == "Atencao" ? "text-warning fw-semibold" : "";
 
                                         <tr>
                                             <td>@l.DataHora</td>
-                                            <td class="text-end @cor">@l.Valor</td>
+                                            <td class="text-right @cor">@l.Valor</td>
                                         </tr>
                                     }
                                 </tbody>
                             </table>
                         </div>
-                        <div class="card-footer small text-muted">Mostrando as @s.Leituras.Count leituras mais recentes do período.</div>
+                        <div class="border-t border-base-300 p-4 text-sm text-muted text-sm text-muted">Mostrando as @s.Leituras.Count leituras mais recentes do período.</div>
                     }
                 </div>
             </div>
@@ -186,19 +186,19 @@ else
 }
 
 @* Alertas mais recentes deste ativo *@
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
-    <h2 class="h5 m-0">Alertas do ativo</h2>
-    <a class="btn btn-sm btn-outline-secondary" asp-controller="Alertas" asp-action="AlertasExibir">Ver fila de alertas</a>
+<div class="flex flex-wrap justify-between items-center gap-2 mt-4 mb-2">
+    <h2 class="text-lg m-0">Alertas do ativo</h2>
+    <a class="btn btn-sm btn-outline" asp-controller="Alertas" asp-action="AlertasExibir">Ver fila de alertas</a>
 </div>
 
 @if (Model.Alertas.Count == 0)
 {
-    <div class="alert alert-light border">Nenhum alerta registrado para este ativo.</div>
+    <div class="alert bg-base-100 border">Nenhum alerta registrado para este ativo.</div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
+    <div class="overflow-x-auto">
+        <table class="table table-zebra">
             <thead>
                 <tr>
                     <th>Nível</th>
@@ -212,14 +212,14 @@ else
             <tbody>
                 @foreach (AlertaItemViewModel a in Model.Alertas)
                 {
-                    string classeNivel = a.Nivel == "Critico" ? "bg-danger" : "bg-warning text-dark";
-                    string classeSituacao = a.Status == "Resolvido" ? "bg-success"
-                                          : a.Status == "Em analise" ? "bg-info text-dark" : "bg-dark";
+                    string classeNivel = a.Nivel == "Critico" ? "badge-error" : "badge-warning";
+                    string classeSituacao = a.Status == "Resolvido" ? "badge-success"
+                                          : a.Status == "Em analise" ? "badge-info" : "badge-neutral";
 
                     <tr>
                         <td><span class="badge @classeNivel">@AlertasViewModel.NomeNivel(a.Nivel)</span></td>
                         <td>@a.Sensor</td>
-                        <td class="fw-semibold">@a.ValorLido</td>
+                        <td class="font-semibold">@a.ValorLido</td>
                         <td class="text-nowrap">@a.DataHora</td>
                         <td><span class="badge @classeSituacao">@AlertasViewModel.NomeSituacao(a.Status)</span></td>
                         <td>@a.Responsavel</td>

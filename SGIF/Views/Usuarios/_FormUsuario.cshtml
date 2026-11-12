@@ -7,51 +7,51 @@
 }
 
 <form asp-controller="Usuarios" asp-action="Salvar" method="post" novalidate>
-    <div class="modal-header">
-        <h5 class="modal-title">@(novo ? "Novo usuário" : "Editar usuário")</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div class="flex items-center justify-between border-b border-base-300 p-4">
+        <h5 class="text-lg font-semibold">@(novo ? "Novo usuário" : "Editar usuário")</h5>
+        <button type="button" class="btn btn-ghost btn-sm btn-square" data-modal-close aria-label="Fechar"><partial name="_Icone" model='"x"' /></button>
     </div>
 
-    <div class="modal-body">
+    <div class="space-y-4 p-4">
         @if (errosGerais != null && errosGerais.Count > 0)
         {
-            <div class="alert alert-danger">@errosGerais[0].ErrorMessage</div>
+            <div class="alert alert-error">@errosGerais[0].ErrorMessage</div>
         }
 
         <input type="hidden" asp-for="IdUsuario" />
 
         <div class="mb-3">
-            <label asp-for="Nome" class="form-label">Nome</label>
-            <input asp-for="Nome" class="form-control" maxlength="200" />
-            <span asp-validation-for="Nome" class="text-danger small"></span>
+            <label asp-for="Nome" class="label font-medium text-sm">Nome</label>
+            <input asp-for="Nome" class="input w-full" maxlength="200" />
+            <span asp-validation-for="Nome" class="text-error text-sm"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Email" class="form-label">E-mail</label>
-            <input asp-for="Email" type="email" class="form-control" maxlength="150" />
-            <span asp-validation-for="Email" class="text-danger small"></span>
+            <label asp-for="Email" class="label font-medium text-sm">E-mail</label>
+            <input asp-for="Email" type="email" class="input w-full" maxlength="150" />
+            <span asp-validation-for="Email" class="text-error text-sm"></span>
         </div>
 
         <div class="mb-3">
-            <label asp-for="NivelAcesso" class="form-label">Perfil</label>
-            <select asp-for="NivelAcesso" class="form-select">
+            <label asp-for="NivelAcesso" class="label font-medium text-sm">Perfil</label>
+            <select asp-for="NivelAcesso" class="select w-full">
                 @foreach (int nivel in new[] { Usuario.Funcionario, Usuario.Manutencao, Usuario.Administrador })
                 {
                     <option value="@nivel">@Usuario.NomePerfil(nivel)</option>
                 }
             </select>
-            <span asp-validation-for="NivelAcesso" class="text-danger small"></span>
+            <span asp-validation-for="NivelAcesso" class="text-error text-sm"></span>
         </div>
 
         <div class="mb-1">
-            <label asp-for="Senha" class="form-label">@(novo ? "Senha" : "Nova senha (deixe em branco para manter a atual)")</label>
-            <input asp-for="Senha" type="password" class="form-control" autocomplete="new-password" />
-            <span asp-validation-for="Senha" class="text-danger small"></span>
+            <label asp-for="Senha" class="label font-medium text-sm">@(novo ? "Senha" : "Nova senha (deixe em branco para manter a atual)")</label>
+            <input asp-for="Senha" type="password" class="input w-full" autocomplete="new-password" />
+            <span asp-validation-for="Senha" class="text-error text-sm"></span>
         </div>
     </div>
 
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <div class="flex justify-end gap-2 border-t border-base-300 p-4">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
     </div>
 </form>

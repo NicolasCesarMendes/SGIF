@@ -1,48 +1,36 @@
 @model SGIF.Models.LoginViewModel
 @{
-    Layout = null;
+    ViewData["Title"] = "Entrar";
+    ViewData["Publica"] = true;
+    ViewData["SemCabecalho"] = true;
 }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SGIF - Login</title>
-    <link rel="stylesheet" href="~/css/Login.css" asp-append-version="true" />
-</head>
-<body>
-    <div class="card">
-        <h2>SGIF</h2>
-        <p class="subtitle">Sistema de Gestão Industrial Ferroviário</p>
-
-        @if (TempData["Sucesso"] is string mensagemSucesso)
-        {
-            <div class="msg-ok">@mensagemSucesso</div>
-        }
-
-        @if (ViewBag.Erro != null)
-        {
-            <div class="msg-erro">@ViewBag.Erro</div>
-        }
-
-        <form asp-controller="Login" asp-action="LoginProcessar" method="post">
-            <div class="field">
-                <label asp-for="Email">E-mail</label>
-                <input asp-for="Email" type="email" autocomplete="username" placeholder="Digite o seu e-mail" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+<section class="mx-auto flex w-full max-w-lg flex-1 items-center px-5 py-12">
+    <div class="card card-border w-full bg-base-100 shadow-sm">
+        <div class="card-body gap-5 p-7 sm:p-9">
+            <div class="text-center">
+                <span class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-box bg-primary text-primary-content"><partial name="_Icone" model='"train"' /></span>
+                <h1 class="font-serif text-3xl">Bem-vindo ao SGIF</h1>
+                <p class="mt-2 text-muted">Sistema de Gestão Industrial Ferroviário</p>
             </div>
 
-            <div class="field">
-                <label asp-for="Senha">Senha</label>
-                <input asp-for="Senha" type="password" autocomplete="current-password" placeholder="Digite a sua senha" />
-                <span asp-validation-for="Senha" class="text-danger"></span>
-            </div>
+            @if (TempData["Sucesso"] is string mensagemSucesso) { <div class="alert alert-success" role="status">@mensagemSucesso</div> }
+            @if (ViewBag.Erro != null) { <div class="alert alert-error" role="alert">@ViewBag.Erro</div> }
 
-            <button type="submit">Entrar</button>
-        </form>
-
-        <p class="alternar">Não tem conta? <a asp-controller="Login" asp-action="CadastroExibir">Criar uma conta</a></p>
+            <form asp-controller="Login" asp-action="LoginProcessar" method="post" class="space-y-4">
+                <label class="campo">
+                    <span class="rotulo">E-mail</span>
+                    <input asp-for="Email" type="email" autocomplete="username" placeholder="Digite o seu e-mail" class="input w-full" />
+                    <span asp-validation-for="Email" class="erro"></span>
+                </label>
+                <label class="campo">
+                    <span class="rotulo">Senha</span>
+                    <input asp-for="Senha" type="password" autocomplete="current-password" placeholder="Digite a sua senha" class="input w-full" />
+                    <span asp-validation-for="Senha" class="erro"></span>
+                </label>
+                <button type="submit" class="btn btn-primary w-full">Entrar</button>
+            </form>
+            <p class="text-center text-sm text-muted">Não tem conta? <a asp-controller="Login" asp-action="CadastroExibir" class="link link-primary">Criar uma conta</a></p>
+        </div>
     </div>
-</body>
-</html>
+</section>

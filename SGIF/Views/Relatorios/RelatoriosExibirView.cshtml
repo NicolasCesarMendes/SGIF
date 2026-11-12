@@ -11,25 +11,25 @@
     string ativoSelecionado = Model.IdAtivo.HasValue ? Model.TipoAtivo + ":" + Model.IdAtivo.Value : "";
 }
 
-<h1 class="h3 mb-1">Relatórios</h1>
+<h1 class="text-2xl mb-1">Relatórios</h1>
 <p class="text-muted mb-3">Estatísticas das leituras e dos alertas, com comparativo mensal.</p>
 
 <!-- Filtros -->
-<form method="get" asp-action="RelatoriosExibir" class="row g-2 align-items-end mb-4" id="formFiltros">
+<form method="get" asp-action="RelatoriosExibir" class="grid grid-cols-12 gap-2 items-end mb-4" id="formFiltros">
     <input type="hidden" name="idAtivo" id="idAtivo" value="@Model.IdAtivo" />
 
-    <div class="col-12 col-sm-6 col-lg-2">
-        <label class="form-label small mb-1" for="tipoAtivo">Tipo de ativo</label>
-        <select name="tipoAtivo" id="tipoAtivo" class="form-select">
+    <div class="col-span-12 sm:col-span-6 lg:col-span-2">
+        <label class="label font-medium text-sm text-sm mb-1" for="tipoAtivo">Tipo de ativo</label>
+        <select name="tipoAtivo" id="tipoAtivo" class="select w-full">
             <option value="">Todos</option>
             <option value="Locomotiva" selected="@(Model.TipoAtivo == "Locomotiva")">Locomotivas</option>
             <option value="Vagao" selected="@(Model.TipoAtivo == "Vagao")">Vagões</option>
         </select>
     </div>
 
-    <div class="col-12 col-sm-6 col-lg-3">
-        <label class="form-label small mb-1" for="ativoEspecifico">Ativo específico</label>
-        <select id="ativoEspecifico" class="form-select">
+    <div class="col-span-12 sm:col-span-6 lg:col-span-3">
+        <label class="label font-medium text-sm text-sm mb-1" for="ativoEspecifico">Ativo específico</label>
+        <select id="ativoEspecifico" class="select w-full">
             <option value="">Todos</option>
             @foreach (OpcaoDeAtivo o in Model.Ativos)
             {
@@ -39,9 +39,9 @@
         </select>
     </div>
 
-    <div class="col-6 col-lg-2">
-        <label class="form-label small mb-1" for="tipoSensor">Tipo de sensor</label>
-        <select name="tipoSensor" id="tipoSensor" class="form-select">
+    <div class="col-span-6 lg:col-span-2">
+        <label class="label font-medium text-sm text-sm mb-1" for="tipoSensor">Tipo de sensor</label>
+        <select name="tipoSensor" id="tipoSensor" class="select w-full">
             <option value="">Todos</option>
             @foreach (string tipo in TiposSensor.Todos)
             {
@@ -50,9 +50,9 @@
         </select>
     </div>
 
-    <div class="col-6 col-lg-2">
-        <label class="form-label small mb-1" for="periodo">Período</label>
-        <select name="periodo" id="periodo" class="form-select">
+    <div class="col-span-6 lg:col-span-2">
+        <label class="label font-medium text-sm text-sm mb-1" for="periodo">Período</label>
+        <select name="periodo" id="periodo" class="select w-full">
             @foreach (var p in RelatorioViewModel.Periodos)
             {
                 <option value="@p.Codigo" selected="@(Model.Periodo == p.Codigo)">@p.Texto</option>
@@ -60,9 +60,9 @@
         </select>
     </div>
 
-    <div class="col-6 col-lg-1">
-        <label class="form-label small mb-1" for="meses">Meses</label>
-        <select name="meses" id="meses" class="form-select">
+    <div class="col-span-6 lg:col-span-1">
+        <label class="label font-medium text-sm text-sm mb-1" for="meses">Meses</label>
+        <select name="meses" id="meses" class="select w-full">
             @foreach (int m in new[] { 3, 6, 12 })
             {
                 <option value="@m" selected="@(Model.Meses == m)">@m</option>
@@ -70,15 +70,15 @@
         </select>
     </div>
 
-    <div class="col-6 col-lg-2 d-flex gap-2">
-        <button type="submit" class="btn btn-primary flex-grow-1">Filtrar</button>
-        <a class="btn btn-outline-secondary" asp-action="RelatoriosExibir">Limpar</a>
+    <div class="col-span-6 lg:col-span-2 flex gap-2">
+        <button type="submit" class="btn btn-primary flex-1">Filtrar</button>
+        <a class="btn btn-outline" asp-action="RelatoriosExibir">Limpar</a>
     </div>
 </form>
 
 <!-- Alertas no período -->
-<h2 class="h5">Alertas no período</h2>
-<div class="row g-2 mb-4">
+<h2 class="text-lg">Alertas no período</h2>
+<div class="grid grid-cols-12 gap-2 mb-4">
     @foreach (var (rotulo, quantidade) in new[]
     {
         ("Total", Model.Alertas.Total),
@@ -89,39 +89,39 @@
         ("Resolvidos", Model.Alertas.Resolvidos)
     })
     {
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card text-center">
+        <div class="col-span-6 md:col-span-4 lg:col-span-2">
+            <div class="card card-border bg-base-100 text-center">
                 <div class="card-body py-2">
-                    <div class="fs-4 fw-semibold">@quantidade</div>
-                    <div class="small text-muted">@rotulo</div>
+                    <div class="text-3xl font-semibold">@quantidade</div>
+                    <div class="text-sm text-muted">@rotulo</div>
                 </div>
             </div>
         </div>
     }
 </div>
-<p class="text-muted small mt-n2 mb-4">
+<p class="text-muted text-sm -mt-2 mb-4">
     Tempo médio para resolver um alerta: <strong>@Horas(Model.Alertas.HorasMediasParaResolver)</strong>
 </p>
 
 <!-- Estatísticas por tipo de sensor -->
-<h2 class="h5">Estatísticas das leituras</h2>
+<h2 class="text-lg">Estatísticas das leituras</h2>
 @if (Model.Estatisticas.Count == 0)
 {
-    <div class="alert alert-light border">Sem leituras no período para os filtros escolhidos.</div>
+    <div class="alert bg-base-100 border">Sem leituras no período para os filtros escolhidos.</div>
 }
 else
 {
-    <div class="table-responsive mb-4">
-        <table class="table table-sm align-middle">
+    <div class="overflow-x-auto mb-4">
+        <table class="table table-xs">
             <thead>
                 <tr>
                     <th>Tipo de sensor</th>
-                    <th class="text-end">Sensores</th>
-                    <th class="text-end">Leituras</th>
-                    <th class="text-end">Mínimo</th>
-                    <th class="text-end">Máximo</th>
-                    <th class="text-end">Média</th>
-                    <th class="text-end">Desvio-padrão</th>
+                    <th class="text-right">Sensores</th>
+                    <th class="text-right">Leituras</th>
+                    <th class="text-right">Mínimo</th>
+                    <th class="text-right">Máximo</th>
+                    <th class="text-right">Média</th>
+                    <th class="text-right">Desvio-padrão</th>
                 </tr>
             </thead>
             <tbody>
@@ -130,13 +130,13 @@ else
                     string unidade = TiposSensor.Unidade(e.TipoSensor);
 
                     <tr>
-                        <td class="fw-semibold">@TiposSensor.Nome(e.TipoSensor) <span class="text-muted small">@unidade</span></td>
-                        <td class="text-end">@e.Sensores</td>
-                        <td class="text-end">@e.Quantidade</td>
-                        <td class="text-end">@Valor(e.Minimo)</td>
-                        <td class="text-end">@Valor(e.Maximo)</td>
-                        <td class="text-end">@Valor(e.Media)</td>
-                        <td class="text-end">@Valor(e.Desvio)</td>
+                        <td class="font-semibold">@TiposSensor.Nome(e.TipoSensor) <span class="text-muted text-sm">@unidade</span></td>
+                        <td class="text-right">@e.Sensores</td>
+                        <td class="text-right">@e.Quantidade</td>
+                        <td class="text-right">@Valor(e.Minimo)</td>
+                        <td class="text-right">@Valor(e.Maximo)</td>
+                        <td class="text-right">@Valor(e.Media)</td>
+                        <td class="text-right">@Valor(e.Desvio)</td>
                     </tr>
                 }
             </tbody>
@@ -145,19 +145,19 @@ else
 }
 
 <!-- Comparativo mensal -->
-<h2 class="h5">Comparativo mensal (últimos @Model.Meses meses)</h2>
-<div class="row g-4">
-    <div class="col-12 col-xl-8">
-        <div class="table-responsive">
-            <table class="table table-sm align-middle">
+<h2 class="text-lg">Comparativo mensal (últimos @Model.Meses meses)</h2>
+<div class="grid grid-cols-12 gap-4">
+    <div class="col-span-12 xl:col-span-8">
+        <div class="overflow-x-auto">
+            <table class="table table-xs">
                 <thead>
                     <tr>
                         <th>Mês</th>
                         <th>Tipo de sensor</th>
-                        <th class="text-end">Leituras</th>
-                        <th class="text-end">Média</th>
-                        <th class="text-end">Máximo</th>
-                        <th class="text-end">Variação da média</th>
+                        <th class="text-right">Leituras</th>
+                        <th class="text-right">Média</th>
+                        <th class="text-right">Máximo</th>
+                        <th class="text-right">Variação da média</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -176,10 +176,10 @@ else
                             <tr>
                                 <td>@mes.Rotulo</td>
                                 <td>@TiposSensor.Nome(t.TipoSensor)</td>
-                                <td class="text-end">@t.Quantidade</td>
-                                <td class="text-end">@Valor(t.Media)</td>
-                                <td class="text-end">@Valor(t.Maximo)</td>
-                                <td class="text-end">
+                                <td class="text-right">@t.Quantidade</td>
+                                <td class="text-right">@Valor(t.Media)</td>
+                                <td class="text-right">@Valor(t.Maximo)</td>
+                                <td class="text-right">
                                     @if (t.VariacaoMediaPercentual.HasValue)
                                     {
                                         @((t.VariacaoMediaPercentual.Value >= 0 ? "+" : "") + Valor(t.VariacaoMediaPercentual) + "%")
@@ -195,17 +195,17 @@ else
                 </tbody>
             </table>
         </div>
-        <p class="text-muted small">A variação compara a média com a do último mês que teve leituras do mesmo tipo de sensor.</p>
+        <p class="text-muted text-sm">A variação compara a média com a do último mês que teve leituras do mesmo tipo de sensor.</p>
     </div>
 
-    <div class="col-12 col-xl-4">
-        <div class="table-responsive">
-            <table class="table table-sm align-middle">
+    <div class="col-span-12 xl:col-span-4">
+        <div class="overflow-x-auto">
+            <table class="table table-xs">
                 <thead>
                     <tr>
                         <th>Mês</th>
-                        <th class="text-end">Alertas críticos</th>
-                        <th class="text-end">Alertas de atenção</th>
+                        <th class="text-right">Alertas críticos</th>
+                        <th class="text-right">Alertas de atenção</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -213,8 +213,8 @@ else
                     {
                         <tr>
                             <td>@mes.Rotulo</td>
-                            <td class="text-end">@mes.AlertasCriticos</td>
-                            <td class="text-end">@mes.AlertasAtencao</td>
+                            <td class="text-right">@mes.AlertasCriticos</td>
+                            <td class="text-right">@mes.AlertasAtencao</td>
                         </tr>
                     }
                 </tbody>
@@ -223,26 +223,4 @@ else
     </div>
 </div>
 
-<p class="text-muted small mt-3">Gerado em @Model.GeradoEm.ToString("dd/MM/yyyy HH:mm:ss").</p>
-
-@section Scripts {
-    <script>
-        // "Ativo específico" guarda tipo e id juntos (ex.: Locomotiva:3); no envio, separa nos dois campos
-        (function () {
-            const form = document.getElementById('formFiltros');
-            const tipo = document.getElementById('tipoAtivo');
-            const id = document.getElementById('idAtivo');
-            const especifico = document.getElementById('ativoEspecifico');
-
-            form.addEventListener('submit', function () {
-                if (especifico.value) {
-                    const partes = especifico.value.split(':');
-                    tipo.value = partes[0];
-                    id.value = partes[1];
-                } else {
-                    id.value = '';
-                }
-            });
-        })();
-    </script>
-}
+<p class="text-muted text-sm mt-3">Gerado em @Model.GeradoEm.ToString("dd/MM/yyyy HH:mm:ss").</p>

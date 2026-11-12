@@ -3,41 +3,43 @@
     ViewData["Title"] = "Manutenção";
 
     string NomeClassificacao(string c) => c switch { "Critico" => "Crítico", "Medio" => "Médio", _ => c };
-    string CorClassificacao(string c) => c switch { "Critico" => "danger", "Alto" => "warning", "Medio" => "info", _ => "success" };
+    string ClasseBorda(string c) => c switch { "Critico" => "border-error", "Alto" => "border-warning", "Medio" => "border-info", _ => "border-success" };
+    string ClasseRisco(string c) => c switch { "Critico" => "badge-error", "Alto" => "badge-warning", "Medio" => "badge-info", _ => "badge-success" };
+    string ClasseProgresso(string c) => c switch { "Critico" => "progress-error", "Alto" => "progress-warning", "Medio" => "progress-info", _ => "progress-success" };
     int Contar(string c) => Model.Itens.Count(i => i.Classificacao == c);
 
     int posicao = 0;
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-    <h1 class="h3 m-0">Manutenção</h1>
-    <a class="btn btn-outline-secondary btn-sm" asp-action="ManutencaoExibir">Atualizar</a>
+<div class="flex flex-wrap justify-between items-center gap-2 mb-1">
+    <h1 class="text-2xl m-0">Manutenção</h1>
+    <a class="btn btn-outline btn-sm" asp-action="ManutencaoExibir">Atualizar</a>
 </div>
 
 <p class="text-muted mb-3">
     Plano de intervenções ordenado pelo risco de falha. Atualiza sozinho a cada @Model.SegundosParaAtualizar segundos.
-    <span class="text-muted small">
-        <span data-atualizacao-status></span>
-        <button type="button" class="btn btn-link btn-sm p-0 ms-1 align-baseline" data-atualizacao-alternar>Pausar</button>
+    <span class="text-muted text-sm" data-vue="atualizacao" data-regiao="regiao-manutencao" data-segundos="@Model.SegundosParaAtualizar">
+        <span v-text="status"></span>
+        <button type="button" class="btn btn-ghost btn-sm" v-on:click="alternar" v-text="pausado ? 'Retomar' : 'Pausar'">Pausar</button>
     </span>
 </p>
 
-<!-- Esta parte é recarregada automaticamente (wwwroot/js/atualizacao-automatica.js) -->
-<div id="regiao-manutencao" data-atualizar="@Model.SegundosParaAtualizar">
+<!-- Esta região é atualizada pelo componente Vue de atualização automática. -->
+<div id="regiao-manutencao">
 
-<p class="text-muted small mb-3">
+<p class="text-muted text-sm mb-3">
     Gerado em @Model.GeradoEm.ToString("dd/MM/yyyy HH:mm:ss"), com os dados das últimas @Model.HorasDaAnalise h.
 </p>
 
 <!-- Quantidade de ativos por classificação de risco -->
-<div class="row g-2 mb-3">
+<div class="grid grid-cols-12 gap-2 mb-3">
     @foreach (string c in new[] { "Critico", "Alto", "Medio", "Baixo" })
     {
-        <div class="col-6 col-md-3">
-            <div class="card text-center border-@CorClassificacao(c)">
+        <div class="col-span-6 md:col-span-3">
+            <div class="card card-border bg-base-100 text-center @ClasseBorda(c)">
                 <div class="card-body py-2">
-                    <div class="fs-4 fw-semibold">@Contar(c)</div>
-                    <div class="small text-muted">@NomeClassificacao(c)</div>
+                    <div class="text-3xl font-semibold">@Contar(c)</div>
+                    <div class="text-sm text-muted">@NomeClassificacao(c)</div>
                 </div>
             </div>
         </div>
@@ -46,14 +48,14 @@
 
 @if (Model.Itens.Count == 0)
 {
-    <div class="alert alert-light border">
+    <div class="alert bg-base-100 border">
         Nenhum ativo para avaliar. Cadastre ativos e sensores na Frota para o plano aparecer aqui.
     </div>
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
+    <div class="overflow-x-auto">
+        <table class="table table-zebra">
             <thead>
                 <tr>
                     <th>#</th>
@@ -67,44 +69,41 @@ else
                 @foreach (RiscoAtivo item in Model.Itens)
                 {
                     posicao++;
-                    string cor = CorClassificacao(item.Classificacao);
+                    
                     string nomeTipo = item.TipoAtivo == "Vagao" ? "Vagão" : "Locomotiva";
 
                     <tr>
                         <td>@posicao</td>
                         <td>
                             <a asp-controller="Ficha" asp-action="FichaExibir" asp-route-tipo="@item.TipoAtivo" asp-route-id="@item.IdAtivo"
-                               class="fw-semibold text-decoration-none">@nomeTipo @item.Numero</a>
-                            <div class="text-muted small">@item.Descricao</div>
+                               class="font-semibold no-underline">@nomeTipo @item.Numero</a>
+                            <div class="text-muted text-sm">@item.Descricao</div>
                         </td>
                         <td>
                             @if (item.Estado == "Em manutencao")
                             {
-                                <span class="badge bg-warning text-dark">@FrotaViewModel.NomeEstado(item.Estado)</span>
+                                <span class="badge badge-warning">@FrotaViewModel.NomeEstado(item.Estado)</span>
                             }
                             else
                             {
-                                <span class="badge bg-success">@FrotaViewModel.NomeEstado(item.Estado)</span>
+                                <span class="badge badge-success">@FrotaViewModel.NomeEstado(item.Estado)</span>
                             }
                         </td>
                         <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-semibold">@item.Pontuacao</span>
-                                <span class="badge bg-@cor @(cor == "warning" || cor == "info" ? "text-dark" : "")">@NomeClassificacao(item.Classificacao)</span>
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold">@item.Pontuacao</span>
+                                <span class="badge @ClasseRisco(item.Classificacao)">@NomeClassificacao(item.Classificacao)</span>
                             </div>
-                            <div class="progress mt-1" style="height: 6px;" role="progressbar"
-                                 aria-valuenow="@item.Pontuacao" aria-valuemin="0" aria-valuemax="100">
-                                <div class="progress-bar bg-@cor" style="width: @(item.Pontuacao)%"></div>
-                            </div>
+                            <progress class="progress mt-1 @ClasseProgresso(item.Classificacao)" value="@item.Pontuacao" max="100" aria-label="Risco @item.Pontuacao por cento"></progress>
                         </td>
                         <td>
                             @if (item.Motivos.Count == 0)
                             {
-                                <span class="text-muted small">Nenhum ponto de atenção.</span>
+                                <span class="text-muted text-sm">Nenhum ponto de atenção.</span>
                             }
                             else
                             {
-                                <ul class="mb-0 ps-3 small">
+                                <ul class="mb-0 ps-3 text-sm">
                                     @foreach (string motivo in item.Motivos)
                                     {
                                         <li>@motivo</li>
@@ -122,8 +121,8 @@ else
 </div>
 
 <details class="mt-3">
-    <summary class="fw-semibold">Como a pontuação é calculada</summary>
-    <div class="small text-muted mt-2">
+    <summary class="font-semibold">Como a pontuação é calculada</summary>
+    <div class="text-sm text-muted mt-2">
         <p class="mb-1">A pontuação vai de 0 a 100 e soma quatro partes:</p>
         <ul class="mb-2">
             <li>Alertas ainda não resolvidos do ativo (até 50 pontos).</li>

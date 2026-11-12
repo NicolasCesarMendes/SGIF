@@ -7,42 +7,42 @@
 }
 
 <form asp-controller="Sensores" asp-action="Salvar" method="post" novalidate>
-    <div class="modal-header">
-        <h5 class="modal-title">@(novo ? "Novo sensor" : "Editar sensor")</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div class="flex items-center justify-between border-b border-base-300 p-4">
+        <h5 class="text-lg font-semibold">@(novo ? "Novo sensor" : "Editar sensor")</h5>
+        <button type="button" class="btn btn-ghost btn-sm btn-square" data-modal-close aria-label="Fechar"><partial name="_Icone" model='"x"' /></button>
     </div>
 
-    <div class="modal-body">
+    <div class="space-y-4 p-4">
         @if (errosGerais != null && errosGerais.Count > 0)
         {
-            <div class="alert alert-danger">@errosGerais[0].ErrorMessage</div>
+            <div class="alert alert-error">@errosGerais[0].ErrorMessage</div>
         }
 
         <input type="hidden" asp-for="IdSensor" />
 
-        <div class="row">
-            <div class="col-12 col-sm-5 mb-3">
-                <label asp-for="Tipo" class="form-label">Tipo</label>
-                <select asp-for="Tipo" class="form-select">
+        <div class="grid grid-cols-12">
+            <div class="col-span-12 sm:col-span-5 mb-3">
+                <label asp-for="Tipo" class="label font-medium text-sm">Tipo</label>
+                <select asp-for="Tipo" class="select w-full">
                     <option value="">Selecione...</option>
                     @foreach (string tipo in TiposSensor.Todos)
                     {
                         <option value="@tipo">@TiposSensor.Nome(tipo)</option>
                     }
                 </select>
-                <span asp-validation-for="Tipo" class="text-danger small"></span>
+                <span asp-validation-for="Tipo" class="text-error text-sm"></span>
             </div>
 
-            <div class="col-12 col-sm-7 mb-3">
-                <label asp-for="Modelo" class="form-label">Modelo</label>
-                <input asp-for="Modelo" class="form-control" maxlength="100" />
-                <span asp-validation-for="Modelo" class="text-danger small"></span>
+            <div class="col-span-12 sm:col-span-7 mb-3">
+                <label asp-for="Modelo" class="label font-medium text-sm">Modelo</label>
+                <input asp-for="Modelo" class="input w-full" maxlength="100" />
+                <span asp-validation-for="Modelo" class="text-error text-sm"></span>
             </div>
         </div>
 
         <div class="mb-3">
-            <label asp-for="Ativo" class="form-label">Associado a</label>
-            <select asp-for="Ativo" class="form-select">
+            <label asp-for="Ativo" class="label font-medium text-sm">Associado a</label>
+            <select asp-for="Ativo" class="select w-full">
                 <option value="">Selecione...</option>
                 <optgroup label="Locomotivas">
                     @foreach (OpcaoAtivo o in Model.Locomotivas)
@@ -57,40 +57,40 @@
                     }
                 </optgroup>
             </select>
-            <span asp-validation-for="Ativo" class="text-danger small"></span>
+            <span asp-validation-for="Ativo" class="text-error text-sm"></span>
         </div>
 
-        <p class="text-muted small mb-2">Faixa de medição do sensor (opcional):</p>
-        <div class="row">
-            <div class="col-12 col-sm-6 mb-3">
-                <label asp-for="ValorMinimo" class="form-label">Valor mínimo</label>
-                <input asp-for="ValorMinimo" class="form-control" inputmode="decimal" placeholder="Exemplo: 0" />
-                <span asp-validation-for="ValorMinimo" class="text-danger small"></span>
+        <p class="text-muted text-sm mb-2">Faixa de medição do sensor (opcional):</p>
+        <div class="grid grid-cols-12">
+            <div class="col-span-12 sm:col-span-6 mb-3">
+                <label asp-for="ValorMinimo" class="label font-medium text-sm">Valor mínimo</label>
+                <input asp-for="ValorMinimo" class="input w-full" inputmode="decimal" placeholder="Exemplo: 0" />
+                <span asp-validation-for="ValorMinimo" class="text-error text-sm"></span>
             </div>
-            <div class="col-12 col-sm-6 mb-3">
-                <label asp-for="ValorMaximo" class="form-label">Valor máximo</label>
-                <input asp-for="ValorMaximo" class="form-control" inputmode="decimal" placeholder="Exemplo: 150" />
-                <span asp-validation-for="ValorMaximo" class="text-danger small"></span>
+            <div class="col-span-12 sm:col-span-6 mb-3">
+                <label asp-for="ValorMaximo" class="label font-medium text-sm">Valor máximo</label>
+                <input asp-for="ValorMaximo" class="input w-full" inputmode="decimal" placeholder="Exemplo: 150" />
+                <span asp-validation-for="ValorMaximo" class="text-error text-sm"></span>
             </div>
         </div>
 
-        <p class="text-muted small mb-2">Valores a partir dos quais o sistema gera alerta (opcional):</p>
-        <div class="row">
-            <div class="col-12 col-sm-6 mb-1">
-                <label asp-for="LimiteAtencao" class="form-label">Limite de atenção</label>
-                <input asp-for="LimiteAtencao" class="form-control" inputmode="decimal" placeholder="Exemplo: 80" />
-                <span asp-validation-for="LimiteAtencao" class="text-danger small"></span>
+        <p class="text-muted text-sm mb-2">Valores a partir dos quais o sistema gera alerta (opcional):</p>
+        <div class="grid grid-cols-12">
+            <div class="col-span-12 sm:col-span-6 mb-1">
+                <label asp-for="LimiteAtencao" class="label font-medium text-sm">Limite de atenção</label>
+                <input asp-for="LimiteAtencao" class="input w-full" inputmode="decimal" placeholder="Exemplo: 80" />
+                <span asp-validation-for="LimiteAtencao" class="text-error text-sm"></span>
             </div>
-            <div class="col-12 col-sm-6 mb-1">
-                <label asp-for="LimiteCritico" class="form-label">Limite crítico</label>
-                <input asp-for="LimiteCritico" class="form-control" inputmode="decimal" placeholder="Exemplo: 100" />
-                <span asp-validation-for="LimiteCritico" class="text-danger small"></span>
+            <div class="col-span-12 sm:col-span-6 mb-1">
+                <label asp-for="LimiteCritico" class="label font-medium text-sm">Limite crítico</label>
+                <input asp-for="LimiteCritico" class="input w-full" inputmode="decimal" placeholder="Exemplo: 100" />
+                <span asp-validation-for="LimiteCritico" class="text-error text-sm"></span>
             </div>
         </div>
     </div>
 
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <div class="flex justify-end gap-2 border-t border-base-300 p-4">
+        <button type="button" class="btn btn-outline" data-modal-close>Cancelar</button>
         <button type="submit" class="btn btn-primary">Salvar</button>
     </div>
 </form>
