@@ -1,6 +1,6 @@
 /* ============================================================
    SGIF — único CSS do site (Tailwind 4 + DaisyUI 5)
-   Fonte: Styles/app.css  →  gera wwwroot/css/app.css  (npm run css:build)
+   Fonte: Styles/app.css  →  gera wwwroot/css/site.css  (npm run css:build)
    ============================================================ */
 @import "tailwindcss" source(none);
 
@@ -153,3 +153,4 @@
   }
   .table :where(tbody th) { @apply font-semibold; }
 }
+

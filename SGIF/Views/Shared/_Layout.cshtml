@@ -2,11 +2,10 @@
     string? nome = Context.Session.GetString("nome");
     int.TryParse(Context.Session.GetString("nivelAcesso"), out int nivel);
     bool logado = !string.IsNullOrEmpty(nome);
+    bool publica = ViewData["Publica"] as bool? ?? false;
+    bool semCabecalho = ViewData["SemCabecalho"] as bool? ?? false;
     string controllerAtual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
     string actionAtual = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-
-    // Menu principal. Pronto = false deixa o item desativado até a tela existir
-    // (quando a tela ficar pronta, é só trocar para true).
     var itens = new List<(string Texto, string Controller, string Action, bool Pronto)>
     {
         ("Painel Operacional", "Home", "PainelOperacionalExibir", true),
@@ -17,149 +16,119 @@
         ("Sobre", "Home", "SobreExibir", true),
         ("Equipe", "Home", "EquipeExibir", true)
     };
-
-    // Só o Administrador vê "Usuários"
-    if (nivel == Usuario.Administrador)
-    {
-        itens.Add(("Usuários", "Usuarios", "UsuariosExibir", true));
-    }
+    if (nivel == Usuario.Administrador) { itens.Add(("Usuários", "Usuarios", "UsuariosExibir", true)); }
+    bool Ativo(string controller, string acao) =>
+        controller == "Home"
+            ? controllerAtual == "Home" && string.Equals(actionAtual, acao, StringComparison.OrdinalIgnoreCase)
+            : string.Equals(controllerAtual, controller, StringComparison.OrdinalIgnoreCase)
+              || (controller == "Frota" && (controllerAtual == "Ficha" || controllerAtual == "Sensores"));
+    var sucesso = TempData["Sucesso"] as string;
+    var erro = TempData["Erro"] as string;
 }
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SGIF: monitoramento de locomotivas e vagões, alertas e manutenção preditiva." />
     <title>@ViewData["Title"] - SGIF</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SGIF.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-b mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand font-bold" asp-controller="Home" asp-action="@(logado ? "PainelOperacionalExibir" : "LandingPageExibir")">SGIF</a>
+<body class="flex min-h-screen flex-col bg-base-200 font-sans text-base-content">
+    <a href="#conteudo" class="sr-only z-[100] rounded-field border border-base-300 bg-base-100 px-4 py-3 focus:not-sr-only focus:absolute focus:left-4 focus:top-4">Pular para o conteúdo</a>
 
-                @if (logado)
-                {
-                    <!-- No celular o menu fica recolhido atrás deste botão -->
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
-                            aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-
-                    <div class="collapse navbar-collapse" id="menuPrincipal">
-                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+    @if (!semCabecalho)
+    {
+        @if (publica)
+        {
+            <header class="border-b border-base-300 bg-base-100">
+                <div class="mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3 sm:px-8">
+                    <a asp-controller="Home" asp-action="LandingPageExibir" class="flex items-center gap-2.5 font-serif text-xl" aria-label="SGIF - início">
+                        <span class="text-primary"><partial name="_Icone" model='"train"' /></span>SGIF
+                    </a>
+                    <a asp-controller="Login" asp-action="LoginExibir" class="btn btn-primary rounded-full">Abrir painel</a>
+                </div>
+            </header>
+        }
+        else if (logado)
+        {
+            <header class="sticky top-0 z-40 border-b border-base-300 bg-base-200/90 backdrop-blur">
+                <div class="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-4 px-5 sm:px-8">
+                    <a asp-controller="Home" asp-action="PainelOperacionalExibir" class="flex shrink-0 items-center gap-2.5 text-primary">
+                        <partial name="_Icone" model='"train"' />
+                        <span class="whitespace-nowrap font-serif text-xl tracking-tight text-base-content">Ferrovia <em>Telemetria</em></span>
+                    </a>
+                    <nav aria-label="Principal" class="mr-auto ml-8 hidden min-[1120px]:block">
+                        <ul class="menu menu-horizontal gap-1 p-0">
                             @foreach (var item in itens)
                             {
-                                // A Ficha do ativo e os Sensores fazem parte da Frota: mantêm "Frota" destacado
-                                // Painel, Sobre e Equipe usam o mesmo controller (Home): aí também compara a action
-                                bool ativo = (string.Equals(controllerAtual, item.Controller, StringComparison.OrdinalIgnoreCase)
-                                        && (item.Controller != "Home" || string.Equals(actionAtual, item.Action, StringComparison.OrdinalIgnoreCase)))
-                                    || (item.Controller == "Frota" && (controllerAtual == "Ficha" || controllerAtual == "Sensores"));
-
-                                <li class="nav-item">
-                                    @if (item.Pronto)
-                                    {
-                                        <a class="nav-link @(ativo ?"active fw-semibold" : "")"
-                                           asp-controller="@item.Controller" asp-action="@item.Action">@item.Texto</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="nav-link disabled" title="Em desenvolvimento">@item.Texto</span>
-                                    }
-                                </li>
+                                <li><a asp-controller="@item.Controller" asp-action="@item.Action" aria-current="@(Ativo(item.Controller, item.Action) ? "page" : null)" class="whitespace-nowrap text-muted hover:text-base-content aria-[current=page]:bg-base-300/60 aria-[current=page]:font-semibold aria-[current=page]:text-base-content">@item.Texto</a></li>
                             }
                         </ul>
-
-                        <!-- Área do usuário -->
-                        <div class="flex items-center gap-3">
-                            <!-- O nome leva para "Minha conta" (RF14) -->
-                            <a href="#" class="text-lg-end lh-sm text-decoration-none text-body" title="Minha conta"
-                               data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande>
-                                <div class="font-semibold">@nome</div>
-                                <small class="text-muted">@Usuario.NomePerfil(nivel)</small>
-                            </a>
-                            <form asp-controller="Login" asp-action="SairProcessar" method="post" class="m-0">
-                                <button type="submit" class="btn btn-outline btn-sm">Sair</button>
-                            </form>
-                        </div>
+                    </nav>
+                    <div class="ml-auto hidden shrink-0 items-center gap-4 min-[1120px]:flex">
+                        <a href="#perfil" class="btn btn-ghost btn-circle" aria-label="Abrir perfil de @nome" title="Minha conta" data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande>
+                            <partial name="_Icone" model='"user"' />
+                        </a>
+                        <form asp-controller="Login" asp-action="SairProcessar" method="post"><button type="submit" class="btn btn-outline rounded-full">Sair</button></form>
                     </div>
-                }
-            </div>
-        </nav>
-    </header>
-
-    <div class="container">
-        <main role="main" class="pb-3">
-            @* Mensagens enviadas pelos controllers (TempData), exibidas uma única vez *@
-            @if (TempData["Sucesso"] is string mensagemSucesso)
-            {
-                <div class="alert alert-success" role="alert">
-                    @mensagemSucesso
-                    <button type="button" class="btn btn-ghost btn-sm btn-square" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    <details class="dropdown dropdown-end ml-auto min-[1120px]:hidden">
+                        <summary class="btn btn-ghost btn-square" aria-label="Abrir menu"><partial name="_Icone" model='"menu"' /></summary>
+                        <ul class="menu dropdown-content z-50 mt-2 w-64 rounded-box border border-base-300 bg-base-100 p-2">
+                            @foreach (var item in itens)
+                            {
+                                <li><a asp-controller="@item.Controller" asp-action="@item.Action" aria-current="@(Ativo(item.Controller, item.Action) ? "page" : null)" class="text-muted aria-[current=page]:bg-base-300/60 aria-[current=page]:font-semibold aria-[current=page]:text-base-content">@item.Texto</a></li>
+                            }
+                            <li class="mt-2 border-t border-base-300 px-3 pt-3 text-sm text-muted">@nome · @Usuario.NomePerfil(nivel)</li>
+                            <li><a href="#perfil" data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande><partial name="_Icone" model='"user"' /> Minha conta</a></li>
+                            <li><form asp-controller="Login" asp-action="SairProcessar" method="post" class="p-0"><button type="submit" class="w-full px-3 py-2 text-left text-primary underline">Sair</button></form></li>
+                        </ul>
+                    </details>
                 </div>
-            }
+            </header>
+        }
+    }
 
-            @if (TempData["Erro"] is string mensagemErro)
-            {
-                <div class="alert alert-error" role="alert">
-                    @mensagemErro
-                    <button type="button" class="btn btn-ghost btn-sm btn-square" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-            }
-
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-t footer text-muted">
-        <div class="container">
-            &copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário
-        </div>
-    </footer>
-
-    @if (logado)
+    @if (!string.IsNullOrEmpty(sucesso) || !string.IsNullOrEmpty(erro))
     {
-        <!-- Modais do sistema: o conteúdo dos formulários é carregado por fetch (wwwroot/js/modais.js) -->
-        <div class="modal" id="modalForm" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" id="modalFormDialog">
-                <div class="modal-content" id="modalFormCorpo"></div>
-            </div>
-        </div>
-
-        <!-- Confirmação de exclusão (usada por Usuários e Sensores) -->
-        <div class="modal" id="modalConfirmar" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <form id="formConfirmar" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" id="confirmarId" />
-
-                        <div class="flex items-center justify-between border-b border-base-300 p-4">
-                            <h5 class="text-lg font-semibold">Confirmar exclusão</h5>
-                            <button type="button" class="btn btn-ghost btn-sm btn-square" data-modal-close aria-label="Fechar"></button>
-                        </div>
-                        <div class="space-y-4 p-4">
-                            <p class="mb-0" id="confirmarTexto"></p>
-                            <div class="alert alert-error mt-3 mb-0 d-none" id="confirmarErro"></div>
-                        </div>
-                        <div class="flex justify-end gap-2 border-t border-base-300 p-4">
-                            <button type="button" class="btn btn-outline" data-modal-close>Cancelar</button>
-                            <button type="submit" class="btn btn-error">Excluir</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="toast toast-end toast-bottom z-50">
+            @if (!string.IsNullOrEmpty(sucesso))
+            {
+                <div data-vue="fechavel"><div v-if="aberto" class="alert alert-success" role="status"><span v-pre>@sucesso</span><button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button></div></div>
+            }
+            @if (!string.IsNullOrEmpty(erro))
+            {
+                <div data-vue="fechavel"><div v-if="aberto" class="alert alert-error" role="alert"><span v-pre>@erro</span><button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button></div></div>
+            }
         </div>
     }
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/modais.js" asp-append-version="true"></script>
-    <script src="~/js/atualizacao-automatica.js" asp-append-version="true"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <main id="conteudo" tabindex="-1" class="flex flex-1 flex-col">
+        @if (publica) { @RenderBody() } else { <div class="pagina">@RenderBody()</div> }
+    </main>
+    <footer class="border-t border-base-300 bg-base-300/40 px-5 py-4 text-center text-xs text-muted">&copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário</footer>
+
+    @if (logado)
+    {
+        <dialog class="modal" id="modalForm" aria-label="Formulário">
+            <div class="modal-box max-w-2xl p-0" id="modalFormDialog"><div id="modalFormCorpo"></div></div>
+            <form method="dialog" class="modal-backdrop"><button aria-label="Fechar">Fechar</button></form>
+        </dialog>
+        <dialog class="modal" id="modalConfirmar" aria-labelledby="confirmarTitulo">
+            <div class="modal-box max-w-lg"><form id="formConfirmar" method="post">
+                @Html.AntiForgeryToken()<input type="hidden" name="id" id="confirmarId" />
+                <h2 class="text-xl font-semibold" id="confirmarTitulo">Confirmar exclusão</h2><p class="py-4" id="confirmarTexto"></p>
+                <div class="alert alert-error mb-4 hidden" id="confirmarErro" role="alert"></div>
+                <div class="flex justify-end gap-2"><button type="button" class="btn btn-ghost" data-modal-close>Cancelar</button><button type="submit" class="btn btn-error">Excluir</button></div>
+            </form></div>
+            <form method="dialog" class="modal-backdrop"><button aria-label="Fechar">Fechar</button></form>
+        </dialog>
+    }
+
+    <script type="module" src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

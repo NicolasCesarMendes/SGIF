@@ -1,6 +1,6 @@
 @model HomeViewModel
 @{
-    Layout = "_LayoutDaisy";
+    Layout = "_Layout";
     ViewData["Title"] = "Painel Operacional";
 
     var indicadores = new[]
@@ -16,7 +16,7 @@
     <partial name="_CabecalhoPagina" model='("Centro_de_Controle", "Painel Operacional", "")' />
     <p class="mt-3.5 text-lg text-muted">
         Olá, <strong class="font-semibold text-base-content">@Model.Nome</strong>. Resumo da operação neste momento.
-        @* Atualização automática (app.js): troca só o conteúdo de #regiao-painel *@
+        @* Atualização automática (site.js): troca só o conteúdo de #regiao-painel *@
         <span class="text-sm" data-vue="atualizacao" data-regiao="regiao-painel" data-segundos="5">
             <span>{{ status }}</span>
             <button type="button" class="link link-primary ml-1 font-medium" v-on:click="alternar">{{ pausado ? 'Retomar' : 'Pausar' }}</button>
@@ -151,3 +151,5 @@
         </div>
     </div>
 </section>
+
+

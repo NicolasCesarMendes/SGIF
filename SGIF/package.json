@@ -1,10 +1,10 @@
 {
   "name": "sgif-front",
   "private": true,
-  "description": "Build do CSS do SGIF (Tailwind 4 + DaisyUI 5). O resultado fica em wwwroot/css/app.css.",
+  "description": "Build do CSS do SGIF (Tailwind 4 + DaisyUI 5). O resultado fica em wwwroot/css/site.css.",
   "scripts": {
-    "css:build": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --minify",
-    "css:watch": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/app.css --watch"
+    "css:build": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/site.css --minify",
+    "css:watch": "tailwindcss -i ./Styles/app.css -o ./wwwroot/css/site.css --watch"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.0",
