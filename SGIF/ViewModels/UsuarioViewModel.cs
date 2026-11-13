@@ -25,6 +25,9 @@ namespace SGIF.Models
 
         public int NivelAcesso { get; set; } = Usuario.Funcionario;
 
+        // Situação da conta (ativar/desativar fica no modal de edição). Usuário novo nasce ativo.
+        public bool Ativo { get; set; } = true;
+
         // Obrigatória ao criar (conferido no controller). Ao editar, vazio = mantém a senha atual.
         [StringLength(100, MinimumLength = 6, ErrorMessage = "A senha deve ter de 6 a 100 caracteres")]
         public string? Senha { get; set; }

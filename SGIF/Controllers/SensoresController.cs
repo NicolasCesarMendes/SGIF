@@ -43,6 +43,7 @@ namespace SGIF.Controllers
                 vm.ValorMaximo = EntradaNumerica.Formatar(sensor.ValorMaximo);
                 vm.LimiteAtencao = EntradaNumerica.Formatar(sensor.LimiteAtencao);
                 vm.LimiteCritico = EntradaNumerica.Formatar(sensor.LimiteCritico);
+                vm.SensorAtivo = sensor.Ativo;
                 vm.Ativo = sensor.IdLocomotiva.HasValue
                     ? "Locomotiva:" + sensor.IdLocomotiva.Value
                     : "Vagao:" + sensor.IdVagao;
@@ -94,36 +95,6 @@ namespace SGIF.Controllers
             }
         }
 
-        // Ativar / Desativar (botão simples da Ficha, sem modal). Desativar preserva todo o histórico.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult AlterarAtivoProcessar(int id, bool ativo)
-        {
-            Sensor? sensor = _sensores.BuscarPorId(id);
-
-            if (sensor == null)
-            {
-                TempData["Erro"] = "Sensor não encontrado.";
-                return RedirectToAction("FrotaExibir", "Frota");
-            }
-
-            try
-            {
-                _sensores.AlterarAtivo(id, ativo);
-
-                TempData["Sucesso"] = ativo ? "Sensor ativado." : "Sensor desativado. O histórico foi mantido.";
-            }
-            catch (Exception)
-            {
-                TempData["Erro"] = "Não foi possível alterar a situação do sensor. Tente novamente.";
-            }
-
-            // Volta para a Ficha do ativo ao qual o sensor pertence
-            return sensor.IdLocomotiva.HasValue
-                ? RedirectToAction("FichaExibir", "Ficha", new { tipo = "Locomotiva", id = sensor.IdLocomotiva.Value })
-                : RedirectToAction("FichaExibir", "Ficha", new { tipo = "Vagao", id = sensor.IdVagao });
-        }
-
         // Excluir (a confirmação é feita no modal). Só vale para sensor sem leituras.
         // Sucesso = 200; erro = mensagem em texto.
         [HttpPost]
@@ -143,7 +114,7 @@ namespace SGIF.Controllers
             catch (SqlException ex) when (ex.Number == 547)
             {
                 // Chave estrangeira: o sensor já tem leituras (e talvez alertas) registradas
-                return Conflict("Este sensor já tem leituras registradas e não pode ser excluído. Desative-o para preservar o histórico.");
+                return Conflict("Este sensor já tem leituras registradas e não pode ser excluído. Para preservar o histórico, edite o sensor e marque-o como Inativo.");
             }
             catch (Exception)
             {
@@ -233,7 +204,8 @@ namespace SGIF.Controllers
                 LimiteAtencao = atencao,
                 LimiteCritico = critico,
                 IdLocomotiva = idLocomotiva,
-                IdVagao = idVagao
+                IdVagao = idVagao,
+                Ativo = vm.IdSensor == 0 || vm.SensorAtivo   // sensor novo sempre nasce ativo
             };
         }
 

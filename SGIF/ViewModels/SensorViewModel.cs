@@ -24,6 +24,9 @@ namespace SGIF.Models
         [Required(ErrorMessage = "Selecione o ativo")]
         public string? Ativo { get; set; }
 
+        // Situação do sensor (só aparece na edição). Inativo mantém o histórico, mas não recebe leituras
+        public bool SensorAtivo { get; set; } = true;
+
         // Opções do select de ativos (preenchidas pelo controller, não vêm do formulário)
         public List<OpcaoAtivo> Locomotivas { get; set; } = new();
         public List<OpcaoAtivo> Vagoes { get; set; } = new();

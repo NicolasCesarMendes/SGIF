@@ -40,15 +40,18 @@
                             <button type="button" class="btn btn-sm btn-outline"
                                     data-modal-url="@Url.Action("FormUsuario", "Usuarios", new { id = u.IdUsuario })">Editar</button>
 
-                            <form asp-action="AlterarAtivoProcessar" method="post" class="inline">
-                                <input type="hidden" name="id" value="@u.IdUsuario" />
-                                <input type="hidden" name="ativo" value="@((!u.Ativo).ToString().ToLower())" />
-                                <button type="submit" class="btn btn-sm btn-outline">@(u.Ativo ? "Desativar" : "Ativar")</button>
-                            </form>
-
-                            <button type="button" class="btn btn-sm btn-outline btn-error"
-                                    data-excluir-url="@Url.Action("Excluir", "Usuarios")" data-excluir-id="@u.IdUsuario"
-                                    data-excluir-texto="Deseja realmente excluir o usuário @(u.Nome)? Esta ação não pode ser desfeita.">Excluir</button>
+                            @if (Usuario.EhPadrao(u.IdUsuario))
+                            {
+                                @* Usuários de teste padrão (ids 1, 2 e 3) não podem ser excluídos *@
+                                <button type="button" class="btn btn-sm btn-outline btn-error" disabled
+                                        title="Usuário de teste padrão: não pode ser excluído">Excluir</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline btn-error"
+                                        data-excluir-url="@Url.Action("Excluir", "Usuarios")" data-excluir-id="@u.IdUsuario"
+                                        data-excluir-texto="Deseja realmente excluir o usuário @(u.Nome)? Esta ação não pode ser desfeita.">Excluir</button>
+                            }
                         }
                     </td>
                 </tr>

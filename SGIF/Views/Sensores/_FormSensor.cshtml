@@ -60,6 +60,17 @@
             <span asp-validation-for="Ativo" class="text-error text-sm"></span>
         </div>
 
+        @if (!novo)
+        {
+            <div class="mb-3">
+                <label asp-for="SensorAtivo" class="label font-medium text-sm">Situação</label>
+                <select asp-for="SensorAtivo" class="select w-full">
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo (mantém o histórico, mas não recebe novas leituras)</option>
+                </select>
+            </div>
+        }
+
         <p class="text-muted text-sm mb-2">Faixa de medição do sensor (opcional):</p>
         <div class="grid grid-cols-12">
             <div class="col-span-12 sm:col-span-6 mb-3">

@@ -1,18 +1,11 @@
 //{
-//  "connectionstrings": {
-//    "stringconexaosqlserver": "data source=ecfp602d1301689\\sqlexpress; database=SGIFBancoDados; user id=sa; password=sa; trustservercertificate=true"
+//  "ConnectionStrings": {
+//    "StringConexaoSQLServer": "Data Source=.\\SQLEXPRESS; Database=SGIFBancoDados; User ID=sa; Password=sa; TrustServerCertificate=True"
 //  }
-//} // nicolas sala gustavo
+//}
 
 {
   "ConnectionStrings": {
-    "StringConexaoSQLServer": "Data Source=.\\SQLEXPRESS; Database=SGIFBancoDados; User ID=sa; Password=sa; TrustServerCertificate=True"
-  }
+    "StringConexaoSQLServer": "Data Source=.;Initial Catalog=SGIFBancoDados;Integrated Security=True;TrustServerCertificate=True"
+  } // nicolas em casa
 }
-//Enzo sala gustavo
-
-//{
-//  "ConnectionStrings": {
-//    "StringConexaoSQLServer": "Data Source=.;Initial Catalog=SGIFBancoDados;Integrated Security=True;TrustServerCertificate=True"
-//  } // nicolas em casa
-//}

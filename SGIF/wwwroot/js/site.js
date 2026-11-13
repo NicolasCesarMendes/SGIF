@@ -17,7 +17,15 @@ const componentes = {
     ] }),
   },
   // Mensagem do servidor (TempData) que o usuário pode fechar
-  fechavel: { setup: () => ({ aberto: ref(true) }) },
+  // Some sozinha depois de alguns segundos (data-tempo, em milissegundos; padrão 6 s).
+  fechavel: {
+    props: ['tempo'],
+    setup(props) {
+      const aberto = ref(true);
+      setTimeout(() => { aberto.value = false; }, +props.tempo || 6000);
+      return { aberto };
+    },
+  },
 
   // Atualização automática ("tempo real"): busca a página de novo e troca só a região marcada.
   // Pausa com a aba escondida, com modal aberto e após 15 min sem uso; segue o redirecionamento ao Login.

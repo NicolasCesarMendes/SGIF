@@ -43,6 +43,17 @@
             <span asp-validation-for="NivelAcesso" class="text-error text-sm"></span>
         </div>
 
+        @if (!novo)
+        {
+            <div class="mb-3">
+                <label for="Ativo" class="label font-medium text-sm">Situação</label>
+                <select name="Ativo" id="Ativo" class="select w-full">
+                    <option value="true" selected="@Model.Ativo">Ativo</option>
+                    <option value="false" selected="@(!Model.Ativo)">Inativo (não consegue entrar no sistema)</option>
+                </select>
+            </div>
+        }
+
         <div class="mb-1">
             <label asp-for="Senha" class="label font-medium text-sm">@(novo ? "Senha" : "Nova senha (deixe em branco para manter a atual)")</label>
             <input asp-for="Senha" type="password" class="input w-full" autocomplete="new-password" />

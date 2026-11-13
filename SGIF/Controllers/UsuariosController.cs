@@ -56,6 +56,7 @@ namespace SGIF.Controllers
                 vm.Nome = usuario.Nome;
                 vm.Email = usuario.Email;
                 vm.NivelAcesso = usuario.NivelAcesso;
+                vm.Ativo = usuario.Ativo;
             }
 
             return PartialView("_FormUsuario", vm);
@@ -117,6 +118,7 @@ namespace SGIF.Controllers
                     usuario.Nome = vm.Nome.Trim();
                     usuario.Email = vm.Email.Trim();
                     usuario.NivelAcesso = vm.NivelAcesso;
+                    usuario.Ativo = vm.Ativo;
 
                     _usuarios.Atualizar(usuario);
 
@@ -142,36 +144,6 @@ namespace SGIF.Controllers
             }
         }
 
-        // Ativar / Desativar (botão simples da lista, sem modal)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult AlterarAtivoProcessar(int id, bool ativo)
-        {
-            if (id == IdLogado())
-            {
-                TempData["Erro"] = MensagemPropriaConta;
-                return RedirectToAction("UsuariosExibir");
-            }
-
-            try
-            {
-                if (_usuarios.AlterarAtivo(id, ativo))
-                {
-                    TempData["Sucesso"] = ativo ? "Usuário ativado." : "Usuário desativado.";
-                }
-                else
-                {
-                    TempData["Erro"] = "Usuário não encontrado.";
-                }
-            }
-            catch (Exception)
-            {
-                TempData["Erro"] = "Não foi possível alterar a situação. Tente novamente.";
-            }
-
-            return RedirectToAction("UsuariosExibir");
-        }
-
         // Excluir (a confirmação é feita no modal). Sucesso = 200; erro = mensagem em texto.
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -180,6 +152,12 @@ namespace SGIF.Controllers
             if (id == IdLogado())
             {
                 return Conflict(MensagemPropriaConta);
+            }
+
+            // Usuários de teste padrão (ids 1, 2 e 3) nunca são excluídos
+            if (Usuario.EhPadrao(id))
+            {
+                return Conflict("Este é um usuário de teste padrão e não pode ser excluído.");
             }
 
             try

@@ -92,7 +92,7 @@ namespace SGIF.Controllers
             {
                 Usuario? usuario = _usuarios.BuscarPorEmail(vm.Email);
 
-                if (usuario != null && usuario.Ativo)
+                if (usuario != null)
                 {
                     var passwordHasher = new PasswordHasher<Usuario>();
 
@@ -101,6 +101,14 @@ namespace SGIF.Controllers
                     if (resultado == PasswordVerificationResult.Success ||
                         resultado == PasswordVerificationResult.SuccessRehashNeeded)
                     {
+                        // Senha certa, mas a conta foi desativada: mensagem própria.
+                        // (Só aparece com a senha correta, para não revelar quais e-mails existem.)
+                        if (!usuario.Ativo)
+                        {
+                            ViewBag.Erro = "Esta conta está desativada. Procure um administrador do sistema.";
+                            return View("LoginExibirView", vm);
+                        }
+
                         HttpContext.Session.SetString("idUsuario", usuario.IdUsuario.ToString());
                         HttpContext.Session.SetString("nome", usuario.Nome);
                         HttpContext.Session.SetString("nivelAcesso", usuario.NivelAcesso.ToString());
@@ -110,7 +118,7 @@ namespace SGIF.Controllers
                     }
                 }
 
-                // Mesma mensagem para e-mail inexistente, senha errada ou conta desativada
+                // Mesma mensagem para e-mail inexistente ou senha errada
                 ViewBag.Erro = "E-mail ou senha inválidos.";
                 return View("LoginExibirView", vm);
             }

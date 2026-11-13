@@ -103,16 +103,9 @@ else
                                 <button type="button" class="btn btn-sm btn-outline"
                                         data-modal-url="@Url.Action("FormSensor", "Sensores", new { id = s.Id })">Editar</button>
 
-                                <!-- Desativar mantém o histórico; o sensor inativo só deixa de receber leituras -->
-                                <form asp-controller="Sensores" asp-action="AlterarAtivoProcessar" method="post" class="inline">
-                                    <input type="hidden" name="id" value="@s.Id" />
-                                    <input type="hidden" name="ativo" value="@(s.Ativo ? "false" : "true")" />
-                                    <button type="submit" class="btn btn-sm btn-outline">@(s.Ativo ? "Desativar" : "Ativar")</button>
-                                </form>
-
                                 <button type="button" class="btn btn-sm btn-outline btn-error"
                                         data-excluir-url="@Url.Action("Excluir", "Sensores")" data-excluir-id="@s.Id"
-                                        data-excluir-texto="Deseja realmente excluir este sensor? Só é possível excluir sensores que nunca registraram leituras. Para preservar o histórico, use Desativar.">Excluir</button>
+                                        data-excluir-texto="Deseja realmente excluir este sensor? Só é possível excluir sensores que nunca registraram leituras. Para preservar o histórico, edite o sensor e marque-o como Inativo.">Excluir</button>
                             </td>
                         }
                     </tr>

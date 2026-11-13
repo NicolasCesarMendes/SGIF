@@ -57,9 +57,9 @@
         {
             <header class="sticky top-0 z-40 border-b border-base-300 bg-base-200/90 backdrop-blur">
                 <div class="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-4 px-5 sm:px-8">
-                    <a asp-controller="Home" asp-action="PainelOperacionalExibir" class="flex shrink-0 items-center gap-2.5 text-primary">
+                    <a asp-controller="Home" asp-action="LandingPageExibir" class="flex shrink-0 items-center gap-2.5 text-primary" aria-label="SGIF - página inicial">
                         <partial name="_Icone" model='"train"' />
-                        <span class="whitespace-nowrap font-serif text-xl tracking-tight text-base-content">Ferrovia <em>Telemetria</em></span>
+                        <span class="whitespace-nowrap font-serif text-xl tracking-tight text-base-content">SGIF</span>
                     </a>
                     <nav aria-label="Principal" class="mr-auto ml-8 hidden min-[1120px]:block">
                         <ul class="menu menu-horizontal gap-1 p-0">
@@ -97,11 +97,11 @@
         <div class="toast toast-end toast-bottom z-50">
             @if (!string.IsNullOrEmpty(sucesso))
             {
-                <div data-vue="fechavel"><div v-if="aberto" class="alert alert-success" role="status"><span v-pre>@sucesso</span><button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button></div></div>
+                <div data-vue="fechavel" data-tempo="6000"><div v-if="aberto" class="alert alert-success" role="status"><span v-pre>@sucesso</span><button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button></div></div>
             }
             @if (!string.IsNullOrEmpty(erro))
             {
-                <div data-vue="fechavel"><div v-if="aberto" class="alert alert-error" role="alert"><span v-pre>@erro</span><button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button></div></div>
+                <div data-vue="fechavel" data-tempo="10000"><div v-if="aberto" class="alert alert-error" role="alert"><span v-pre>@erro</span><button type="button" class="btn btn-ghost btn-sm btn-square" aria-label="Fechar mensagem" v-on:click="aberto = false"><partial name="_Icone" model='"x"' /></button></div></div>
             }
         </div>
     }

@@ -35,12 +35,14 @@ namespace SGIF.Classes
                     limite_atencao = @limite_atencao,
                     limite_critico = @limite_critico,
                     id_locomotiva = @id_locomotiva,
-                    id_vagao = @id_vagao
+                    id_vagao = @id_vagao,
+                    ativo = @ativo
                 WHERE id_sensor = @id_sensor";
 
             return Executar(sql, p =>
             {
                 p.AddWithValue("@id_sensor", sensor.IdSensor);
+                p.AddWithValue("@ativo", sensor.Ativo);
                 AdicionarParametros(p, sensor);
             });
         }
