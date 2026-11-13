@@ -110,11 +110,6 @@ namespace SGIF.Controllers
             return View("EquipeExibirView");
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
         [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

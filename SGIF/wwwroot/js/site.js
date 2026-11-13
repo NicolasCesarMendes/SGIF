@@ -271,3 +271,16 @@ function iniciarFiltrosRelatorio() {
 
 iniciarModais();
 iniciarFiltrosRelatorio();
+
+// Mostrar/ocultar senha: <button data-alternar-senha="IdDoCampo"> com dois <span> (olho aberto e olho cortado)
+document.addEventListener('click', (e) => {
+  const botao = e.target.closest('[data-alternar-senha]');
+  if (!botao) return;
+  const campo = document.getElementById(botao.dataset.alternarSenha);
+  if (!campo) return;
+  const mostrar = campo.type === 'password';
+  campo.type = mostrar ? 'text' : 'password';
+  botao.setAttribute('aria-pressed', String(mostrar));
+  botao.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+  botao.querySelectorAll(':scope > span').forEach((icone, i) => icone.classList.toggle('hidden', (i === 0) === mostrar));
+});

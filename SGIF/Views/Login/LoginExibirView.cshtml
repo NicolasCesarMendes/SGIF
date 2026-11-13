@@ -5,32 +5,44 @@
     ViewData["SemCabecalho"] = true;
 }
 
-<section class="mx-auto flex w-full max-w-lg flex-1 items-center px-5 py-12">
-    <div class="card card-border w-full bg-base-100 shadow-sm">
-        <div class="card-body gap-5 p-7 sm:p-9">
-            <div class="text-center">
-                <span class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-box bg-primary text-primary-content"><partial name="_Icone" model='"train"' /></span>
-                <h1 class="font-serif text-3xl">Bem-vindo ao SGIF</h1>
-                <p class="mt-2 text-muted">Sistema de Gestão Industrial Ferroviário</p>
-            </div>
+<div class="acesso">
+    <partial name="_Lateral" />
 
-            @if (TempData["Sucesso"] is string mensagemSucesso) { <div class="alert alert-success" role="status">@mensagemSucesso</div> }
-            @if (ViewBag.Erro != null) { <div class="alert alert-error" role="alert">@ViewBag.Erro</div> }
+    <section class="acesso-area">
+        <div class="acesso-form">
+            <h1 class="acesso-h1">Entrar no <span class="destaque"><span>SGIF</span></span></h1>
+            <p class="acesso-sub">Acesse com seu e-mail e senha para ver o monitoramento.</p>
 
-            <form asp-controller="Login" asp-action="LoginProcessar" method="post" class="space-y-4">
-                <label class="campo">
-                    <span class="rotulo">E-mail</span>
-                    <input asp-for="Email" type="email" autocomplete="username" placeholder="Digite o seu e-mail" class="input w-full" />
+            @if (TempData["Sucesso"] is string mensagemSucesso) { <div class="alert alert-success mt-4" role="status">@mensagemSucesso</div> }
+            @if (ViewBag.Erro != null) { <div class="alert alert-error mt-4" role="alert">@ViewBag.Erro</div> }
+
+            <form asp-controller="Login" asp-action="LoginProcessar" method="post">
+                <div class="acesso-campo">
+                    <label asp-for="Email" class="acesso-rotulo">E-mail*</label>
+                    <div class="input w-full">
+                        <span class="text-muted"><partial name="_Icone" model='"mail"' /></span>
+                        <input asp-for="Email" type="email" class="grow" autocomplete="username" placeholder="Digite o seu e-mail" />
+                    </div>
                     <span asp-validation-for="Email" class="erro"></span>
-                </label>
-                <label class="campo">
-                    <span class="rotulo">Senha</span>
-                    <input asp-for="Senha" type="password" autocomplete="current-password" placeholder="Digite a sua senha" class="input w-full" />
+                </div>
+
+                <div class="acesso-campo">
+                    <label asp-for="Senha" class="acesso-rotulo">Senha*</label>
+                    <div class="input w-full">
+                        <span class="text-muted"><partial name="_Icone" model='"lock"' /></span>
+                        <input asp-for="Senha" type="password" class="grow" autocomplete="current-password" placeholder="Digite a sua senha" />
+                        <button type="button" class="btn btn-ghost btn-sm btn-square acesso-olho" data-alternar-senha="Senha" aria-label="Mostrar senha" aria-pressed="false">
+                            <span><partial name="_Icone" model='"eye"' /></span>
+                            <span class="hidden"><partial name="_Icone" model='"eyeOff"' /></span>
+                        </button>
+                    </div>
                     <span asp-validation-for="Senha" class="erro"></span>
-                </label>
-                <button type="submit" class="btn btn-primary w-full">Entrar</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-6 w-full">Entrar <partial name="_Icone" model='"arrowRight"' /></button>
             </form>
-            <p class="text-center text-sm text-muted">Não tem conta? <a asp-controller="Login" asp-action="CadastroExibir" class="link link-primary">Criar uma conta</a></p>
+
+            <a asp-controller="Login" asp-action="CadastroExibir" class="btn btn-link acesso-link">Criar uma conta</a>
         </div>
-    </div>
-</section>
+    </section>
+</div>

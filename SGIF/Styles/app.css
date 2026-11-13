@@ -145,6 +145,51 @@
   .input.input:has(.input-validation-error) { --input-color: var(--color-error); }
   .checkbox.checkbox { border-color: color-mix(in oklab, var(--color-base-content) 60%, var(--color-base-100)); }
 
+  /* ---------- Telas de acesso (Login e Cadastro): painel azul + formulário ---------- */
+  .acesso { display: grid; flex: 1; min-height: 560px; grid-template-columns: 1fr; }
+  @media (min-width: 861px) { .acesso { grid-template-columns: 45fr 55fr; } }
+
+  .acesso-lateral { display: flex; flex-direction: column; overflow: hidden; padding: 2.25rem 45px; color: #fff;
+    background: linear-gradient(to bottom, #355b93, #1f4075, #122a50); }
+  .acesso-marca { display: flex; align-items: center; gap: .875rem; font-size: 1.05rem; font-weight: 600; }
+  .acesso-marca-icone { display: flex; width: 2.25rem; height: 2.25rem; align-items: center; justify-content: center;
+    border-radius: 10px; background: rgb(255 255 255 / .15); }
+  .acesso-selo { align-self: flex-start; margin-top: 84px; padding: .375rem .75rem; border: 1px solid rgb(255 255 255 / .2);
+    border-radius: 9999px; background: rgb(255 255 255 / .1); font-size: .7rem; font-weight: 500; }
+  .acesso-titulo { margin-top: 18px; max-width: 440px; font-family: Inter, system-ui, sans-serif; color: #fff;
+    font-size: clamp(1.9rem, 3vw, 2.45rem); line-height: 1.2; font-weight: 600; letter-spacing: -.01em; }
+  .acesso-traco { margin-top: 26px; width: 2.5rem; height: 3px; border-radius: 2px; background: #7fb0ee; }
+  .acesso-ilustracao { display: flex; flex: 1; align-items: center; justify-content: center; padding: 1rem 0; }
+  .acesso-ilustracao svg { display: block; margin: 0 auto; width: 100%; max-width: 480px; height: auto; }
+  .acesso-rodape { display: flex; align-items: center; gap: .875rem; font-size: .68rem; letter-spacing: .06em;
+    text-transform: uppercase; color: rgb(255 255 255 / .85); }
+  .acesso-rodape i { display: block; width: 2rem; height: 1px; background: #7fb0ee; }
+  @media (max-width: 860px) {
+    .acesso-lateral { padding: 1.5rem; }
+    .acesso-selo { margin-top: 1.75rem; }
+    .acesso-ilustracao, .acesso-rodape { display: none; }
+  }
+
+  .acesso-area { display: flex; align-items: center; justify-content: center; padding: 2rem 1.25rem; background: var(--color-base-100); }
+  @media (min-width: 861px) { .acesso-area { padding: 3rem 2rem; } }
+  .acesso-form { width: 100%; max-width: 400px; }
+  .acesso-h1 { font-family: Inter, system-ui, sans-serif; font-size: clamp(2.6rem, 4.6vw, 3.6rem); line-height: 1.05;
+    font-weight: 800; letter-spacing: -.03em; }
+  .acesso-h1 .destaque { position: relative; display: block; padding-left: 18px; }
+  .acesso-h1 .destaque::before { content: ""; position: absolute; top: 12%; bottom: 8%; left: 0; width: 4px;
+    border-radius: 3px; background: #7fb0ee; }
+  .acesso-h1 .destaque > span { background: linear-gradient(to right, var(--color-primary), var(--color-info));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .acesso-sub { margin-top: 22px; font-size: .875rem; color: color-mix(in oklab, var(--color-base-content) 72%, var(--color-base-100)); }
+  .acesso-campo { margin-top: 22px; }
+  .acesso-rotulo { display: block; margin-bottom: .5rem; font-size: .8rem; font-weight: 600; }
+  .acesso-campo .erro { display: block; margin-top: .25rem; min-height: 1.2em; }
+  .acesso-olho { margin-right: -.5rem; }
+  .acesso-link { display: flex; width: fit-content; margin: .875rem auto 0; font-size: .8rem; font-weight: 600; text-decoration: none; }
+
+  /* rodapé do site */
+  .rodape-texto { font-size: .75rem; line-height: 1.75; }
+
   .stat-title, .stat-desc { @apply text-muted; opacity: 1; }
 
   /* cabeçalho de tabela no estilo do SGIF */

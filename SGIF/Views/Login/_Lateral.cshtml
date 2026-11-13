@@ -1,0 +1,47 @@
+@* Painel azul à esquerda das telas de Login e Cadastro (estilos: .acesso-* em Styles/app.css) *@
+<section class="acesso-lateral" aria-label="Apresentação do SGIF">
+    <div class="acesso-marca">
+        <span class="acesso-marca-icone"><partial name="_Icone" model='"train"' /></span>
+        <span>Ferrovia Telemetria</span>
+    </div>
+
+    <span class="acesso-selo">SGIF</span>
+    <h2 class="acesso-titulo">Sistema de Gestão Industrial Ferroviário.</h2>
+    <div class="acesso-traco"></div>
+
+    <div class="acesso-ilustracao">
+        <svg viewBox="0 0 430 280" fill="none" aria-hidden="true">
+            <ellipse cx="187" cy="110" rx="135" ry="105" stroke="rgba(255,255,255,.14)" />
+            <ellipse cx="187" cy="110" rx="92" ry="72" stroke="rgba(255,255,255,.14)" />
+            <g fill="rgba(255,255,255,.22)">
+                @for (var linha = 0; linha < 4; linha++)
+                {
+                    @for (var coluna = 0; coluna < 4; coluna++)
+                    {
+                        <circle cx="@(28 + coluna * 14)" cy="@(40 + linha * 14)" r="1" />
+                    }
+                }
+            </g>
+            <path d="M0 202h62q18 0 33-17l32-50h23" stroke="#7aa6dd" stroke-width="1.3" />
+            <circle cx="85" cy="152" r="2.5" fill="#9cc0ee" />
+            <path d="M277 60h66l19-22h63" stroke="#7aa6dd" stroke-width="1.3" />
+            <circle cx="343" cy="60" r="3" fill="#9cc0ee" />
+            <path d="M297 168l43 42h27" stroke="#7aa6dd" stroke-width="1.3" />
+            <rect x="367" y="186" width="28" height="4" rx="2" fill="#7aa6dd" />
+            <path d="M140 175 52 272H349L277 160" stroke="#8fb2dd" stroke-width="1.3" stroke-linejoin="round" />
+            <g stroke="#8fb2dd" stroke-width="1.1"><path d="M126 190H297M104 215H313M81 240H329M52 272H350" /></g>
+            <rect x="129" y="15" width="165" height="190" rx="24" fill="rgba(255,255,255,.1)" />
+            <path d="M150 62q0-32 32-32h61q32 0 32 32v122q0 6-6 6H156q-6 0-6-6Z" fill="#c9d6ee" />
+            <rect x="160" y="52" width="105" height="60" rx="14" fill="#13294f" />
+            <path d="M168 104l12-44h38l-8 44Z" fill="rgba(255,255,255,.22)" />
+            <path d="M222 56h36q4 0 4 4v40Z" fill="rgba(255,255,255,.1)" />
+            <path d="M213 52v60" stroke="#c9d6ee" stroke-width="2" />
+            <rect x="150" y="137" width="125" height="20" fill="#3a5f9a" />
+            <rect x="165" y="142" width="22" height="7" rx="2" fill="#fff" /><rect x="238" y="142" width="22" height="7" rx="2" fill="#fff" />
+            <path d="M165 172h95l8 18H157Z" fill="#13294f" />
+            <path d="M200 168h25" stroke="#3a5f9a" stroke-width="2" stroke-linecap="round" />
+        </svg>
+    </div>
+
+    <div class="acesso-rodape"><i></i>Gestão industrial ferroviária</div>
+</section>

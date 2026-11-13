@@ -109,7 +109,12 @@
     <main id="conteudo" tabindex="-1" class="flex flex-1 flex-col">
         @if (publica) { @RenderBody() } else { <div class="pagina">@RenderBody()</div> }
     </main>
-    <footer class="border-t border-base-300 bg-base-300/40 px-5 py-4 text-center text-xs text-muted">&copy; 2026 - SGIF - Sistema de Gestão Industrial Ferroviário</footer>
+    <footer class="border-t border-base-300 bg-base-300/40 px-5 py-4 text-center">
+        <p class="rodape-texto text-muted">
+            SGIF — Sistema de Gestão Industrial Ferroviário · Projeto Integrador Interdisciplinar 2<br>
+            CST em Análise e Desenvolvimento de Sistemas, SENAI Ribeirão Preto · @DateTime.Now.Year
+        </p>
+    </footer>
 
     @if (logado)
     {

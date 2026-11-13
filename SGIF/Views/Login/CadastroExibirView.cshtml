@@ -5,41 +5,65 @@
     ViewData["SemCabecalho"] = true;
 }
 
-<section class="mx-auto flex w-full max-w-lg flex-1 items-center px-5 py-12">
-    <div class="card card-border w-full bg-base-100 shadow-sm">
-        <div class="card-body gap-5 p-7 sm:p-9">
-            <div class="text-center">
-                <span class="mx-auto mb-3 inline-flex size-12 items-center justify-center rounded-box bg-primary text-primary-content"><partial name="_Icone" model='"train"' /></span>
-                <h1 class="font-serif text-3xl">Criar conta</h1>
-                <p class="mt-2 text-muted">SGIF - Sistema de Gestão Industrial Ferroviário</p>
-            </div>
+<div class="acesso">
+    <partial name="_Lateral" />
 
-            @if (ViewBag.Erro != null) { <div class="alert alert-error" role="alert">@ViewBag.Erro</div> }
+    <section class="acesso-area">
+        <div class="acesso-form">
+            <h1 class="acesso-h1">Criar conta <span class="destaque"><span>no SGIF</span></span></h1>
+            <p class="acesso-sub">Novas contas começam como Funcionário (somente consulta).</p>
 
-            <form asp-controller="Login" asp-action="CadastrarProcessar" method="post" class="space-y-4">
-                <label class="campo">
-                    <span class="rotulo">Nome</span>
-                    <input asp-for="Nome" autocomplete="name" maxlength="200" placeholder="Digite o seu nome" class="input w-full" />
+            @if (ViewBag.Erro != null) { <div class="alert alert-error mt-4" role="alert">@ViewBag.Erro</div> }
+
+            <form asp-controller="Login" asp-action="CadastrarProcessar" method="post">
+                <div class="acesso-campo">
+                    <label asp-for="Nome" class="acesso-rotulo">Nome*</label>
+                    <div class="input w-full">
+                        <span class="text-muted"><partial name="_Icone" model='"user"' /></span>
+                        <input asp-for="Nome" autocomplete="name" maxlength="200" class="grow" placeholder="Digite o seu nome" />
+                    </div>
                     <span asp-validation-for="Nome" class="erro"></span>
-                </label>
-                <label class="campo">
-                    <span class="rotulo">E-mail</span>
-                    <input asp-for="Email" type="email" autocomplete="username" maxlength="150" placeholder="Digite o seu e-mail" class="input w-full" />
+                </div>
+
+                <div class="acesso-campo">
+                    <label asp-for="Email" class="acesso-rotulo">E-mail*</label>
+                    <div class="input w-full">
+                        <span class="text-muted"><partial name="_Icone" model='"mail"' /></span>
+                        <input asp-for="Email" type="email" autocomplete="username" maxlength="150" class="grow" placeholder="Digite o seu e-mail" />
+                    </div>
                     <span asp-validation-for="Email" class="erro"></span>
-                </label>
-                <label class="campo">
-                    <span class="rotulo">Senha</span>
-                    <input asp-for="Senha" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres" class="input w-full" />
+                </div>
+
+                <div class="acesso-campo">
+                    <label asp-for="Senha" class="acesso-rotulo">Senha*</label>
+                    <div class="input w-full">
+                        <span class="text-muted"><partial name="_Icone" model='"lock"' /></span>
+                        <input asp-for="Senha" type="password" class="grow" autocomplete="new-password" placeholder="Mínimo de 6 caracteres" />
+                        <button type="button" class="btn btn-ghost btn-sm btn-square acesso-olho" data-alternar-senha="Senha" aria-label="Mostrar senha" aria-pressed="false">
+                            <span><partial name="_Icone" model='"eye"' /></span>
+                            <span class="hidden"><partial name="_Icone" model='"eyeOff"' /></span>
+                        </button>
+                    </div>
                     <span asp-validation-for="Senha" class="erro"></span>
-                </label>
-                <label class="campo">
-                    <span class="rotulo">Confirmar senha</span>
-                    <input asp-for="ConfirmarSenha" type="password" autocomplete="new-password" placeholder="Repita a senha" class="input w-full" />
+                </div>
+
+                <div class="acesso-campo">
+                    <label asp-for="ConfirmarSenha" class="acesso-rotulo">Confirmar senha*</label>
+                    <div class="input w-full">
+                        <span class="text-muted"><partial name="_Icone" model='"lock"' /></span>
+                        <input asp-for="ConfirmarSenha" type="password" class="grow" autocomplete="new-password" placeholder="Repita a senha" />
+                        <button type="button" class="btn btn-ghost btn-sm btn-square acesso-olho" data-alternar-senha="ConfirmarSenha" aria-label="Mostrar senha" aria-pressed="false">
+                            <span><partial name="_Icone" model='"eye"' /></span>
+                            <span class="hidden"><partial name="_Icone" model='"eyeOff"' /></span>
+                        </button>
+                    </div>
                     <span asp-validation-for="ConfirmarSenha" class="erro"></span>
-                </label>
-                <button type="submit" class="btn btn-primary w-full">Cadastrar</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-6 w-full">Cadastrar <partial name="_Icone" model='"arrowRight"' /></button>
             </form>
-            <p class="text-center text-sm text-muted">Já tem conta? <a asp-controller="Login" asp-action="LoginExibir" class="link link-primary">Entrar</a></p>
+
+            <a asp-controller="Login" asp-action="LoginExibir" class="btn btn-link acesso-link">Já tenho conta</a>
         </div>
-    </div>
-</section>
+    </section>
+</div>

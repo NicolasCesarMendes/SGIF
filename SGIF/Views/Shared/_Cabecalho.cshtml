@@ -1,0 +1,86 @@
+@{
+    string? nome = Context.Session.GetString("nome");
+    int.TryParse(Context.Session.GetString("nivelAcesso"), out int nivel);
+    bool logado = !string.IsNullOrEmpty(nome);
+    string controllerAtual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string acaoAtual = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    // (texto, controller, action, pronto). Pronto = false deixa o item desativado até a tela existir.
+    var itens = new List<(string Texto, string Controller, string Action, bool Pronto)>
+    {
+        ("Painel Operacional", "Home", "PainelOperacionalExibir", true),
+        ("Frota", "Frota", "FrotaExibir", true),
+        ("Alertas", "Alertas", "AlertasExibir", true),
+        ("Manutenção", "Manutencao", "ManutencaoExibir", true),
+        ("Relatórios", "Relatorios", "RelatoriosExibir", true),
+        ("Sobre", "Home", "SobreExibir", true),
+        ("Equipe", "Home", "EquipeExibir", true)
+    };
+    if (nivel == Usuario.Administrador) { itens.Add(("Usuários", "Usuarios", "UsuariosExibir", true)); }
+
+    // Home tem três itens do menu: compara também a action. Ficha e Sensores pertencem à Frota.
+    bool Ativo(string controller, string acao) =>
+        controller == "Home"
+            ? controllerAtual == "Home" && string.Equals(acaoAtual, acao, StringComparison.OrdinalIgnoreCase)
+            : string.Equals(controllerAtual, controller, StringComparison.OrdinalIgnoreCase)
+              || (controller == "Frota" && (controllerAtual == "Ficha" || controllerAtual == "Sensores"));
+}
+<header class="sticky top-0 z-40 border-b border-base-300 bg-base-200/90 backdrop-blur">
+    <div class="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-4 px-5 sm:px-8">
+        <a asp-controller="Home" asp-action="@(logado ? "PainelOperacionalExibir" : "LandingPageExibir")" class="flex shrink-0 items-center gap-2.5 text-primary">
+            <partial name="_Icone" model='"train"' />
+            <span class="whitespace-nowrap font-serif text-xl tracking-tight text-base-content">Ferrovia <em>Telemetria</em></span>
+        </a>
+
+        @if (logado)
+        {
+            <nav aria-label="Principal" class="mr-auto ml-8 hidden min-[1120px]:block">
+                <ul class="menu menu-horizontal gap-1 p-0">
+                    @foreach (var item in itens)
+                    {
+                        <li class="@(item.Pronto ?"" : "menu-disabled")" title="@(item.Pronto ? null : "Em desenvolvimento")">
+                            @if (item.Pronto)
+                            {
+                                <a asp-controller="@item.Controller" asp-action="@item.Action" aria-current="@(Ativo(item.Controller, item.Action) ? "page" : null)"
+                                   class="whitespace-nowrap text-muted hover:text-base-content aria-[current=page]:bg-base-300/60 aria-[current=page]:font-semibold aria-[current=page]:text-base-content">@item.Texto</a>
+                            }
+                            else { <span class="whitespace-nowrap">@item.Texto</span> }
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+            <div class="ml-auto hidden shrink-0 items-center gap-4 min-[1120px]:flex">
+                <span class="text-right leading-tight">
+                    <span class="block font-semibold">@nome</span>
+                    <small class="text-muted">@Usuario.NomePerfil(nivel)</small>
+                </span>
+                @* O ícone do usuário abre o modal "Minha conta" (RF14) *@
+                <button type="button" class="btn btn-ghost btn-circle" title="Minha conta" aria-label="Minha conta"
+                        data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande><partial name="_Icone" model='"user"' /></button>
+                <form asp-controller="Login" asp-action="SairProcessar" method="post"><button type="submit" class="btn btn-outline rounded-full">Sair</button></form>
+            </div>
+
+            @* Celular e tablet: menu recolhido (DaisyUI dropdown, sem JavaScript) *@
+            <details class="dropdown dropdown-end ml-auto min-[1120px]:hidden">
+                <summary class="btn btn-ghost btn-square" aria-label="Abrir menu"><partial name="_Icone" model='"menu"' /></summary>
+                <ul class="menu dropdown-content z-50 mt-2 w-64 rounded-box border border-base-300 bg-base-100 p-2">
+                    @foreach (var item in itens)
+                    {
+                        <li class="@(item.Pronto ?"" : "menu-disabled")">
+                            @if (item.Pronto)
+                            {
+                                <a asp-controller="@item.Controller" asp-action="@item.Action" aria-current="@(Ativo(item.Controller, item.Action) ? "page" : null)"
+                                   class="text-muted aria-[current=page]:bg-base-300/60 aria-[current=page]:font-semibold aria-[current=page]:text-base-content">@item.Texto</a>
+                            }
+                            else { <span>@item.Texto</span> }
+                        </li>
+                    }
+                    <li class="mt-2 border-t border-base-300 px-3 pt-3 text-sm text-muted">@nome · @Usuario.NomePerfil(nivel)</li>
+                    <li><button type="button" class="px-3 py-2 text-left" data-modal-url="@Url.Action("Modal", "Conta")" data-modal-grande><partial name="_Icone" model='"user"' /> Minha conta</button></li>
+                    <li><form asp-controller="Login" asp-action="SairProcessar" method="post" class="p-0"><button type="submit" class="w-full px-3 py-2 text-left text-primary underline">Sair</button></form></li>
+                </ul>
+            </details>
+        }
+    </div>
+</header>
